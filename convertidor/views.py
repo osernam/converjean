@@ -1,0 +1,300 @@
+from django.shortcuts import render, redirect
+from .models import *
+# pandas para procesar archivos excel
+import pandas as pd
+from django.http import HttpResponse
+#Para descargar el xlsx
+
+import io
+from django.http import FileResponse
+from tempfile import NamedTemporaryFile
+
+def homeView(request):
+    """
+    Renderiza la vista de inicio.
+
+    Argumentos:
+        solicitud (HttpRequest): el objeto de solicitud HTTP.
+    
+    Devoluciones:
+        HttpResponse: la respuesta HTML representada.
+    """
+    return render(request,'index.html')
+
+
+
+def cargar_archivo_excel(request):
+    if request.method == 'POST' and request.FILES['archivo_excel']:
+        archivo = request.FILES['archivo_excel']
+        df = pd.read_excel(archivo)
+        # Trabajar con el DataFrame de Pandas
+        # Procesa los datos como desees
+        
+        # Leer el archivo de Excel en un DataFrame
+        #df = pd.read_excel('almacenamiento_jeans.xlsx')
+
+        # Crear una nueva columna para el color extrayendo la subcadena "AZC" de la columna "Producto"
+        df['Color'] = df['Producto'].str.extract(r'AZC/(\w+)')
+
+        # Agrupar por tienda y color, y combinar las tallas en una sola entrada
+        df_grouped = df.groupby(['Cod.Tienda', 'Color', 'Cod.Producto', 'UPC', 'Cod.Provee']).agg({'Producto': lambda x: ', '.join(x)})
+
+        # Realizar cálculos para obtener el UPC final, la suma de cantidades y conservar las columnas requeridas
+        df_result = df_grouped.reset_index()
+        # Agrega el último UPC del producto
+        df_result['UPC_final'] = df.groupby('Cod.Producto')['UPC'].last()
+        # Suma de cantidades del conjunto de tallas
+        df_result['Emp.Pendiente'] = df.groupby(['Cod.Tienda', 'Color', 'Cod.Producto', 'Cod.Provee'])['Emp.Pendiente'].sum()
+
+        # Crear una nueva tabla con los resultados
+        nueva_tabla = df_result[['Cod.Tienda', 'Cod.Producto', 'UPC_final', 'Producto', 'Cod.Provee', 'Emp.Pendiente', 'Color']]
+
+        nueva_tabla.to_excel('nueva_tabla_jeans.xlsx', index=False)
+        
+        # Crear la respuesta HTTP con el archivo adjunto
+        nombre_archivo = 'nueva_tabla_jeans.xlsx'  # Nombre del archivo de Excel
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+
+        # Leer el archivo de Excel y escribir su contenido en la respuesta HTTP
+        with open(nombre_archivo, 'rb') as excel_file:
+            response.write(excel_file.read())
+
+        return response 
+    return HttpResponse('Error en la carga del archivo')
+
+
+def resultadosJeansFinal(df):
+   
+
+    # Leer el archivo de Excel en un DataFrame
+    df = pd.read_excel('almacenamiento_jeans.xlsx')
+
+    # Crear una nueva columna para el color extrayendo la subcadena "AZC" de la columna "Producto"
+    df['Color'] = df['Producto'].str.extract(r'AZC/(\w+)')
+
+    # Agrupar por tienda y color, y combinar las tallas en una sola entrada
+    df_grouped = df.groupby(['Cod.Tienda', 'Color', 'Cod.Producto', 'UPC', 'Cod.Provee']).agg({'Producto': lambda x: ', '.join(x)})
+
+    # Realizar cálculos para obtener el UPC final, la suma de cantidades y conservar las columnas requeridas
+    df_result = df_grouped.reset_index()
+    # Agrega el último UPC del producto
+    df_result['UPC_final'] = df.groupby('Cod.Producto')['UPC'].last()
+    # Suma de cantidades del conjunto de tallas
+    df_result['Emp.Pendiente'] = df.groupby(['Cod.Tienda', 'Color', 'Cod.Producto', 'Cod.Provee'])['Emp.Pendiente'].sum()
+
+    # Crear una nueva tabla con los resultados
+    nueva_tabla = df_result[['Cod.Tienda', 'Cod.Producto', 'UPC_final', 'Producto', 'Cod.Provee', 'Emp.Pendiente', 'Color']]
+
+    nueva_tabla.to_excel('nueva_tabla_jeans.xlsx', index=False)
+    
+    # Crear la respuesta HTTP con el archivo adjunto
+    nombre_archivo = 'nueva_tabla_jeans.xlsx'  # Nombre del archivo de Excel
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+
+    # Leer el archivo de Excel y escribir su contenido en la respuesta HTTP
+    with open(nombre_archivo, 'rb') as excel_file:
+        response.write(excel_file.read())
+
+    return response
+
+def resumen(request):
+    try:
+        
+        if request.method == 'POST' and request.FILES['archivo_excel']:
+            archivo = request.FILES['archivo_excel']
+            df = pd.read_excel(archivo)
+            print(df)
+            # Trabajar con el DataFrame de Pandas
+            # Procesa los datos como desees
+            
+            #Eliminar filas que contengan la palabra "SubTotal"
+            for x in df.index:
+                if df.loc[x, "Cod.Tienda"] == "SubTotal":
+                    df.drop(x, inplace = True)
+            
+            # Leer el archivo de Excel en un DataFrame
+            #df = pd.read_excel('almacenamiento_jeans.xlsx')
+
+            # Crear una nueva columna para el color extrayendo la subcadena del color de la columna "Producto"
+            #df['Color'] = df['Producto'].str.split('/').str[3]
+            
+            # Crear un nuevo archivo Excel con el DataFrame modificado
+            with NamedTemporaryFile() as temp:
+                with pd.ExcelWriter(temp.name, engine='xlsxwriter') as writer:
+                    df.to_excel(writer, index=False, sheet_name='Sheet1')
+
+                temp.seek(0)
+
+                # Crear una FileResponse con el archivo adjunto para descargar
+                response = FileResponse(open(temp.name, 'rb'), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = 'attachment; filename=nuevo_resumen.xlsx'
+
+                return response  # Devolver la FileResponse con el archivo adjunto para descargar
+                
+
+        
+    except Exception as e:
+        messages.error(request, f"Error: {e}")
+    return HttpResponse('Error en la carga del archivo')
+    
+def res1(request):
+    
+    #EPIR
+    
+    #archivo = request.FILES['archivo_excel']
+    #df = pd.read_excel('convertidor/assets/original.xlsx')
+    #df = pd.read_excel('convertidor/assets/FALABELLA1.xlsm')
+    
+    if request.method == 'POST':
+        archivo = request.FILES['archivo_excel']
+        df = pd.read_excel(archivo)
+        consecutivo = request.POST['consecutivo']
+        
+        
+        #Borrar los "SubTotal"
+        for x in df.index:
+                if df.loc[x, "Cod.Tienda"] == "SubTotal":
+                    df.drop(x, inplace = True)
+        
+        print(df)
+        
+        #Ordenar por codigo de tienda
+        df.sort_values(by='Cod.Tienda', inplace=True)
+        
+        print(df)
+        
+        #Eliminar columnas
+        df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
+        
+        print(df)
+        
+        
+        #Columna numero de caja
+        consecutivo= str(consecutivo)
+        conse= "1811045990" + consecutivo
+        conse = int(conse)
+        print(conse)
+        #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
+        df['Numero Caja'] = df.groupby('Cod.Tienda').ngroup() + int(conse)
+        
+        # Convertir la columna a formato de cadena
+        
+        df['Numero Caja'] = df['Numero Caja'].astype(str)  
+        df['Cod.Prod'] = df['Cod.Prod'].astype(str)
+        df['UPC'] = df['UPC'].astype(int)
+        
+        df['UPC'] = df['UPC'].astype(str)
+        print(df)
+        # Descargar el DataFrame como un archivo Excel
+        
+        # Crear el archivo Excel en memoria
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+
+        # Devolver el archivo Excel al usuario
+        # Crear la respuesta HTTP con el archivo Excel como contenido
+        response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=datos.xlsx'
+
+        
+        return response
+
+def res2 (request):
+    #Archivo plano, Distribuido
+    
+    #df = pd.read_excel('convertidor/assets/original.xlsx')
+    #df = pd.read_excel('convertidor/assets/FALABELLA1.xlsm')
+    if request.method == 'POST':
+        archivo = request.FILES['archivo_excel']
+        df = pd.read_excel(archivo)
+        ordenCompra = request.POST['ordenCompra']
+        linea = request.POST['linea']
+        consecutivo = request.POST['consecutivo']
+        print(ordenCompra)
+        print(linea)
+        print(df)
+        
+        #Borrar los "SubTotal"
+        for x in df.index:
+                if df.loc[x, "Cod.Tienda"] == "SubTotal":
+                    df.drop(x, inplace = True)
+        
+        print(df)
+        
+        #Ordenar por codigo de tienda
+        df.sort_values(by='Cod.Tienda', inplace=True)
+        
+        print(df)
+        
+        #Eliminar columnas
+        df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
+        
+        print(df)
+        
+        #Columna numero de caja
+        
+        consecutivo= str(consecutivo)
+        conse= "1811045990" + consecutivo
+        conse = int(conse)
+        print(conse)
+        #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
+        df['Numero Caja'] = df.groupby('Cod.Tienda').ngroup() + int(conse)
+        
+        # Convertir la columna a formato de cadena
+        
+          
+        df['Cod.Prod'] = df['Cod.Prod'].astype(int)
+        df['Cod.Prod'] = df['Cod.Prod'].astype(str)
+        # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
+        df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
+        df['UPC'] = df['UPC'].astype(int)
+        df['UPC'] = df['UPC'].astype(str)
+        df['UPC'] = df['UPC'].str.lstrip('-')
+        print(df)
+        # Columnas para color y tallas
+        
+        df['Color'] = df['Producto'].str.split('/').str[3]
+        print(df)
+        df['Talla'] = df['Producto'].str.split('/').str[4]
+        #print(df)
+        
+        
+        # Crear una nueva tabla para hacer el resumen
+        
+        nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Numero Caja', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Numero Caja': 'first' , 'Color': 'first', })
+        print(nuevo_df)
+        nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
+        
+        # columnas Linea y Orden de compra
+        nuevo_df['Linea'] = linea
+        nuevo_df['Orden de Compra'] = ordenCompra
+        # Descargar el DataFrame como un archivo Excel
+        
+        #Numero de caja
+        # Cambiar los valores de la columna 'Numero Caja' por un consecutivo
+        
+        # Incrementar el consecutivo por cada fila
+        nuevo_df['Numero Caja'] = range(conse, conse + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
+        nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
+        # Crear el archivo Excel en memoria
+        excel_buffer = io.BytesIO()
+        nuevo_df.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+
+        # Devolver el archivo Excel al usuario
+        # Crear la respuesta HTTP con el archivo Excel como contenido
+        response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=datosPrueba2.xlsx'
+
+        return response
+
+def res3 (request):
+    #Almacenado
+    
+    
+    
+    
+    return render(request, 'res3.html')
