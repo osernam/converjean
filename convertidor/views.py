@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect
 from .models import *
+from django.contrib import messages
 # pandas para procesar archivos excel
 import pandas as pd
 from django.http import HttpResponse
 #Para descargar el xlsx
 
 import io
+import re
 from django.http import FileResponse
 from tempfile import NamedTemporaryFile
 
@@ -208,93 +210,202 @@ def res2 (request):
     #df = pd.read_excel('convertidor/assets/original.xlsx')
     #df = pd.read_excel('convertidor/assets/FALABELLA1.xlsm')
     if request.method == 'POST':
-        archivo = request.FILES['archivo_excel']
-        df = pd.read_excel(archivo)
-        ordenCompra = request.POST['ordenCompra']
-        linea = request.POST['linea']
-        consecutivo = request.POST['consecutivo']
-        print(ordenCompra)
-        print(linea)
-        print(df)
-        
-        #Borrar los "SubTotal"
-        for x in df.index:
-                if df.loc[x, "Cod.Tienda"] == "SubTotal":
-                    df.drop(x, inplace = True)
-        
-        print(df)
-        
-        #Ordenar por codigo de tienda
-        df.sort_values(by='Cod.Tienda', inplace=True)
-        
-        print(df)
-        
-        #Eliminar columnas
-        df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
-        
-        print(df)
-        
-        #Columna numero de caja
-        
-        consecutivo= str(consecutivo)
-        conse= "1811045990" + consecutivo
-        conse = int(conse)
-        print(conse)
-        #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
-        df['Numero Caja'] = df.groupby('Cod.Tienda').ngroup() + int(conse)
-        
-        # Convertir la columna a formato de cadena
-        
-          
-        df['Cod.Prod'] = df['Cod.Prod'].astype(int)
-        df['Cod.Prod'] = df['Cod.Prod'].astype(str)
-        # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
-        df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
-        df['UPC'] = df['UPC'].astype(int)
-        df['UPC'] = df['UPC'].astype(str)
-        df['UPC'] = df['UPC'].str.lstrip('-')
-        print(df)
-        # Columnas para color y tallas
-        
-        df['Color'] = df['Producto'].str.split('/').str[3]
-        print(df)
-        df['Talla'] = df['Producto'].str.split('/').str[4]
-        #print(df)
-        
-        
-        # Crear una nueva tabla para hacer el resumen
-        
-        nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Numero Caja', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Numero Caja': 'first' , 'Color': 'first', })
-        print(nuevo_df)
-        nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
-        
-        # columnas Linea y Orden de compra
-        nuevo_df['Linea'] = linea
-        nuevo_df['Orden de Compra'] = ordenCompra
-        # Descargar el DataFrame como un archivo Excel
-        
-        #Numero de caja
-        # Cambiar los valores de la columna 'Numero Caja' por un consecutivo
-        
-        # Incrementar el consecutivo por cada fila
-        nuevo_df['Numero Caja'] = range(conse, conse + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
-        nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
-        # Crear el archivo Excel en memoria
-        excel_buffer = io.BytesIO()
-        nuevo_df.to_excel(excel_buffer, index=False)
-        excel_buffer.seek(0)
+        try:
+            archivo = request.FILES['archivo_excel']
+            df = pd.read_excel(archivo)
+            ordenCompra = request.POST['ordenCompra']
+            linea = request.POST['linea']
+            consecutivo = request.POST['consecutivo']
+            print(ordenCompra)
+            print(linea)
+            print(df)
+            
+            #Borrar los "SubTotal"
+            for x in df.index:
+                    if df.loc[x, "Cod.Tienda"] == "SubTotal":
+                        df.drop(x, inplace = True)
+            
+            print(df)
+            
+            #Ordenar por codigo de tienda
+            df.sort_values(by='Cod.Tienda', inplace=True)
+            
+            print(df)
+            
+            #Eliminar columnas
+            df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
+            
+            print(df)
+            
+            #Columna numero de caja
+            
+            consecutivo= str(consecutivo)
+            conse= "1811045990" + consecutivo
+            conse = int(conse)
+            print(conse)
+            #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
+            df['Numero Caja'] = df.groupby('Cod.Tienda').ngroup() + int(conse)
+            
+            # Convertir la columna a formato de cadena
+            
+            
+            df['Cod.Prod'] = df['Cod.Prod'].astype(int)
+            df['Cod.Prod'] = df['Cod.Prod'].astype(str)
+            # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
+            df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
+            df['UPC'] = df['UPC'].astype(int)
+            df['UPC'] = df['UPC'].astype(str)
+            df['UPC'] = df['UPC'].str.lstrip('-')
+            print(df)
+            # Columnas para color y tallas
+            
+            df['Color'] = df['Producto'].str.split('/').str[3]
+            print(df)
+            df['Talla'] = df['Producto'].str.split('/').str[4]
+            #print(df)
+            
+            
+            # Crear una nueva tabla para hacer el resumen
+            
+            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Numero Caja', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Numero Caja': 'first' , 'Color': 'first', })
+            print(nuevo_df)
+            nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
+            
+            # columnas Linea y Orden de compra
+            nuevo_df['Linea'] = linea
+            nuevo_df['Orden de Compra'] = ordenCompra
+            # Descargar el DataFrame como un archivo Excel
+            
+            #Numero de caja
+            
+            # Incrementar el consecutivo por cada fila
+            nuevo_df['Numero Caja'] = range(conse, conse + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
+            nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
+            # Crear el archivo Excel en memoria
+            excel_buffer = io.BytesIO()
+            nuevo_df.to_excel(excel_buffer, index=False)
+            excel_buffer.seek(0)
 
-        # Devolver el archivo Excel al usuario
-        # Crear la respuesta HTTP con el archivo Excel como contenido
-        response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=datosPrueba2.xlsx'
+            # Devolver el archivo Excel al usuario
+            # Crear la respuesta HTTP con el archivo Excel como contenido
+            response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=datosPrueba2.xlsx'
 
-        return response
+            return response
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+        return redirect('convertidor:home')
 
 def res3 (request):
     #Almacenado
+    if request.method == 'POST':
+        try:
+            archivo = request.FILES['archivo_excel']
+            df = pd.read_excel(archivo)
+            ordenCompra = request.POST['ordenCompra']
+            linea = request.POST['linea']
+            consecutivo = request.POST['consecutivo']
+            uniCaja = request.POST['uniCaja']
+            
+            
+            print(ordenCompra)
+            print(linea)
+            print(df) 
+            
+            #Borrar los "SubTotal"
+            for x in df.index:
+                    if df.loc[x, "Cod.Tienda"] == "SubTotal":
+                        df.drop(x, inplace = True)
+            
+            print(df)
+            
+            # Crear las nuevas columnas 'Talla' y 'Color'
+            #df['Producto '] = df['Producto'].apply(extract_talla)
+            df.insert(6, 'Producto ', df['Producto'].apply(extract_talla))
+            df['Color'] = df['Producto'].apply(extract_color)
+
+            
+            #Eliminar columnas
+            df.drop(['Producto'], axis=1, inplace=True)
+            
+            # Crear una nueva tabla con los registros separados por cuántas cajas se pueden empacar
+            nueva_tabla = []
+
+            for index, row in df.iterrows():
+                unidades = row['Emp. Pendiente']
+                capacidad_caja = int(uniCaja)  # Capacidad de la caja (reemplaza con el valor real)
+                
+                while unidades > 0:
+                    if unidades >= capacidad_caja:
+                        nueva_fila = row.copy()
+                        nueva_fila['Emp. Pendiente'] = capacidad_caja
+                        nueva_tabla.append(nueva_fila)
+                        unidades -= capacidad_caja
+                    else:
+                        nueva_fila = row.copy()
+                        nueva_fila['Emp. Pendiente'] = unidades
+                        nueva_tabla.append(nueva_fila)
+                        break
+
+            nueva_df = pd.DataFrame(nueva_tabla)
+            
+             #Numero de caja
+            consecutivo= str(consecutivo)
+            conse= "1811045990" + consecutivo
+            conse = int(conse)
+            # Incrementar el consecutivo por cada fila
+            nueva_df['Numero Caja'] = range(conse, conse + len(nueva_df))  # Usar la función range para generar una secuencia de valores consecutivos
+            
+            # columnas Linea y Orden de compra
+            nueva_df['Linea'] = linea
+            nueva_df['Orden de Compra'] = ordenCompra
+            
+            #Convertir columnas a string para evitar el formato de excel
+            nueva_df['Numero Caja'] = nueva_df['Numero Caja'].astype(str)
+            nueva_df['UPC'] = nueva_df['UPC'].astype(str)
+            # Eliminar los decimales
+            nueva_df['UPC'] = nueva_df['UPC'].apply(lambda x: x.split('.')[0])
+            nueva_df['Orden de Compra'] = nueva_df['Orden de Compra'].astype(str)
+            nueva_df['Cod.Prod'] = nueva_df['Cod.Prod'].astype(str)
+            # Eliminar los decimales
+            nueva_df['Cod.Prod'] = nueva_df['Cod.Prod'].apply(lambda x: x.split('.')[0])
+            
+            # Crear el archivo Excel en memoria
+            excel_buffer = io.BytesIO()
+            nueva_df.to_excel(excel_buffer, index=False)
+            excel_buffer.seek(0)
+
+            # Devolver el archivo Excel al usuario
+            # Crear la respuesta HTTP con el archivo Excel como contenido
+            response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=Almacenado.xlsx'
+
+            return response
+    
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+        
+    return redirect('convertidor:home')
     
     
     
-    
-    return render(request, 'res3.html')
+
+
+# Definir una función para extraer la talla y el color
+def extract_talla(cadena):
+    matches = re.findall(r'\b(\d+)\b', cadena)  # Buscar el último número como la talla
+    if matches:
+        return matches[-1]
+    else:
+        return None
+
+def extract_color(cadena):
+    words = cadena.split()  # Dividir la cadena en palabras
+    if len(words) >= 4:
+        color_index = 3  # El color está después del tercer espacio
+        talla_index = -1  # El índice de la talla es el último elemento
+        color = " ".join(words[color_index:talla_index])  # Unir las palabras para formar el color
+        return color
+    else:
+        return None
+

@@ -142,9 +142,11 @@
                   </div>
                   <div class="u-container-align-left u-container-style u-grey-5 u-layout-cell u-radius-50 u-shape-round u-size-23 u-layout-cell-9">
                     <div class="u-container-layout u-valign-top u-container-layout-9">
-                      <h6 class="u-align-left u-custom-font u-font-ubuntu u-text u-text-default u-text-5">Inverso </h6>
+                      <h6 class="u-align-left u-custom-font u-font-ubuntu u-text u-text-default u-text-5">Almacenado </h6>
                       <p class="u-align-left u-text u-text-default u-text-grey-40 u-text-6"> While we were not the first home cleaning company in the UK, we take pride in being market.&nbsp;</p>
-                      <a href="https://nicepage.com/joomla-page-builder" class="u-align-left u-border-2 u-border-grey-75 u-btn u-btn-round u-button-style u-hover-palette-4-dark-1 u-palette-4-base u-radius-20 u-btn-3">cargar</a>
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAlmacenado">
+                        Cargar
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -234,6 +236,46 @@
                   <input type="text" name="ordenCompra" id="ordenCompra" placeholder="Orden de compra" required>
                   <input type="text" name="consecutivo" id="consecutivo" placeholder="consecutivo inicial" minlength="8" maxlength="8" required>
                         
+
+                </div>
+                <button type="submit" class="btn btn-primary">Cargar y generar</button>
+                
+              </form>
+            </div> 
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+     <!-- Modal Almacenado -->
+    <!-- Modal -->
+    <div class="modal fade" id="modalAlmacenado" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Cargar Archivo de Excel</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            
+            <div class="container mt-5">
+              
+              <form action="{% url 'convertidor:res3' %}" method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+                <div class="mb-3">
+                  <label for="archivo_excel" class="form-label">Selecciona un archivo de Excel</label>
+                  <input type="file" class="form-control" id="archivo_excel" name="archivo_excel" required>
+                  
+                  <input type="text" name="linea" id="linea" placeholder="Linea" required>
+                  <input type="text" name="ordenCompra" id="ordenCompra" placeholder="Orden de compra" required>
+                  <input type="text" name="consecutivo" id="consecutivo" placeholder="consecutivo inicial" minlength="8" maxlength="8" required>
+                  <input type="number" name="uniCaja" id="uniCaja" placeholder="Unidades por caja" minlength="1"  required>     
 
                 </div>
                 <button type="submit" class="btn btn-primary">Cargar y generar</button>
