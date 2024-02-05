@@ -3,10 +3,12 @@ from .models import *
 from django.contrib import messages
 # pandas para procesar archivos excel
 import pandas as pd
+import numpy as np
 from django.http import HttpResponse
 #Para descargar el xlsx
 
-import io
+import xlsxwriter
+from io import BytesIO
 import re
 from django.http import FileResponse
 from tempfile import NamedTemporaryFile
@@ -151,49 +153,43 @@ def res1(request):
     
     if request.method == 'POST':
         archivo = request.FILES['archivo_excel']
-        df = pd.read_excel(archivo)
+        df1 = pd.read_excel(archivo)
         consecutivo = request.POST['consecutivo']
         
         
         #Borrar los "SubTotal"
-        for x in df.index:
-                if df.loc[x, "Cod.Tienda"] == "SubTotal":
-                    df.drop(x, inplace = True)
+        for x in df1.index:
+                if df1.loc[x, "Cod.Tienda"] == "SubTotal":
+                    df1.drop(x, inplace = True)
         
-        print(df)
         
         #Ordenar por codigo de tienda
-        df.sort_values(by='Cod.Tienda', inplace=True)
-        
-        print(df)
+        df1.sort_values(by='Cod.Tienda', inplace=True)
         
         #Eliminar columnas
-        df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
+        df1.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
         
-        print(df)
         
         
         #Columna numero de caja
         consecutivo= str(consecutivo)
         conse= "1811045990" + consecutivo
         conse = int(conse)
-        print(conse)
-        #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
-        df['Numero Caja'] = df.groupby('Cod.Tienda').ngroup() + int(conse)
+        #df1['Numero Caja'] = df1.groupby('Tienda').cumcount() + 18110459900000
+        df1['Numero Caja'] = df1.groupby('Cod.Tienda').ngroup() + int(conse)
         
         # Convertir la columna a formato de cadena
         
-        df['Numero Caja'] = df['Numero Caja'].astype(str)  
-        df['Cod.Prod'] = df['Cod.Prod'].astype(str)
-        df['UPC'] = df['UPC'].astype(int)
+        df1['Numero Caja'] = df1['Numero Caja'].astype(str)  
+        df1['Cod.Prod'] = df1['Cod.Prod'].astype(str)
+        df1['UPC'] = df1['UPC'].astype(int)
         
-        df['UPC'] = df['UPC'].astype(str)
-        print(df)
+        df1['UPC'] = df1['UPC'].astype(str)
         # Descargar el DataFrame como un archivo Excel
         
         # Crear el archivo Excel en memoria
         excel_buffer = io.BytesIO()
-        df.to_excel(excel_buffer, index=False)
+        df1.to_excel(excel_buffer, index=False)
         excel_buffer.seek(0)
 
         # Devolver el archivo Excel al usuario
@@ -215,9 +211,59 @@ def res2 (request):
             ordenCompra = request.POST['ordenCompra']
             linea = request.POST['linea']
             consecutivo = request.POST['consecutivo']
-            print(ordenCompra)
-            print(linea)
-            print(df)
+            
+            #original
+            dfOriginal = pd.read_excel(archivo)
+            
+            # Limpiar los valores no finitos
+            dfOriginal['UPC'] = dfOriginal['UPC'].fillna(0)  # Rellenar los valores NaN con 0
+            dfOriginal['UPC'] = dfOriginal['UPC'].replace([np.inf, -np.inf], 0)  # Reemplazar inf con 0
+            
+            dfOriginal['UPC'] = dfOriginal['UPC'].astype(int)
+            dfOriginal['UPC'] = dfOriginal['UPC'].round(0)
+            dfOriginal['UPC'] = dfOriginal['UPC'].astype(str)
+            dfOriginal['UPC'] = dfOriginal['UPC'].str.lstrip('-')
+            
+            
+            #Tabla Epir
+            df1 = pd.read_excel(archivo)
+            
+            
+            #Borrar los "SubTotal"
+            for x in df1.index:
+                    if df1.loc[x, "Cod.Tienda"] == "SubTotal":
+                        df1.drop(x, inplace = True)
+            
+            
+            #Ordenar por codigo de tienda
+            df1.sort_values(by='Cod.Tienda', inplace=True)
+            
+            #Eliminar columnas
+            df1.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
+            
+            
+            
+            #Columna numero de caja
+            consecutivo= str(consecutivo)
+            conse= "1811045990" + consecutivo
+            conse = int(conse)
+            #df1['Numero Caja'] = df1.groupby('Tienda').cumcount() + 18110459900000
+            df1['Numero Caja'] = df1.groupby('Cod.Tienda').ngroup() + int(conse)
+            
+            # Convertir la columna a formato de cadena
+            
+            df1['Numero Caja'] = df1['Numero Caja'].astype(str)  
+            df1['Cod.Prod'] = df1['Cod.Prod'].astype(int)
+            df1['Cod.Prod'] = df1['Cod.Prod'].astype(str)
+            df1['Cod.Prod'] = df1['Cod.Prod'].str.lstrip('-')
+            
+            df1['UPC'] = df1['UPC'].astype(int)            
+            df1['UPC'] = df1['UPC'].astype(str)
+            df1['UPC'] = df1['UPC'].str.lstrip('-')
+            
+            
+            
+            #Tabla Almacenado
             
             #Borrar los "SubTotal"
             for x in df.index:
@@ -273,23 +319,36 @@ def res2 (request):
             # columnas Linea y Orden de compra
             nuevo_df['Linea'] = linea
             nuevo_df['Orden de Compra'] = ordenCompra
-            # Descargar el DataFrame como un archivo Excel
+            
             
             #Numero de caja
             
             # Incrementar el consecutivo por cada fila
             nuevo_df['Numero Caja'] = range(conse, conse + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
             nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
+            
+            
+            
             # Crear el archivo Excel en memoria
-            excel_buffer = io.BytesIO()
-            nuevo_df.to_excel(excel_buffer, index=False)
+            # Crear un escritor de Excel usando pandas
+            excel_buffer = BytesIO()
+            writer = pd.ExcelWriter(excel_buffer, engine='xlsxwriter')
+            
+            dfOriginal.to_excel(writer, sheet_name='Original', index=False)
+            df1.to_excel(writer, sheet_name='EPIR', index=False)
+            nuevo_df.to_excel(writer, sheet_name='Plano', index=False)
+           
+            # Guardar el archivo de Excel
+            writer.close()
+            # Asegurarse de que la posición del archivo esté al principio
             excel_buffer.seek(0)
 
+            # Escribir cada DataFrame en una hoja de Excel
+            
             # Devolver el archivo Excel al usuario
             # Crear la respuesta HTTP con el archivo Excel como contenido
             response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = 'attachment; filename=Distribuido.xlsx'
-
             return response
         except Exception as e:
             messages.error(request, f"Error: {e}")
