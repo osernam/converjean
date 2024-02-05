@@ -205,10 +205,9 @@ def res1(request):
         return response
 
 def res2 (request):
-    #Archivo plano, Distribuido
+    #Nombre archivo Distribuido
+    #Original, EPIR,  Plano
     
-    #df = pd.read_excel('convertidor/assets/original.xlsx')
-    #df = pd.read_excel('convertidor/assets/FALABELLA1.xlsm')
     if request.method == 'POST':
         try:
             archivo = request.FILES['archivo_excel']
@@ -289,7 +288,7 @@ def res2 (request):
             # Devolver el archivo Excel al usuario
             # Crear la respuesta HTTP con el archivo Excel como contenido
             response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename=datosPrueba2.xlsx'
+            response['Content-Disposition'] = 'attachment; filename=Distribuido.xlsx'
 
             return response
         except Exception as e:
@@ -298,6 +297,7 @@ def res2 (request):
 
 def res3 (request):
     #Almacenado
+    #Original Almacenado
     if request.method == 'POST':
         try:
             archivo = request.FILES['archivo_excel']

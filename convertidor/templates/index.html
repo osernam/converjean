@@ -16,8 +16,12 @@
     <title>Casa</title>
     <link rel="stylesheet" href="{% static 'css/nicepage.css' %}" media="screen">
     <link rel="stylesheet" href= "{% static 'css/Casa.css' %}" media="screen">
+    <link rel="stylesheet" href= "{% static 'css/index.css' %}" media="screen">
     <script class="u-script" type="text/javascript" src= "{% static 'js/jquery.js' %}"  defer=""></script>
     <script class="u-script" type="text/javascript" src="{% static 'js/nicepage.js' %} " defer=""></script>
+    <script class="u-script" type="text/javascript" src="{% static 'js/finalizar.js' %} " defer=""></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <meta name="generator" content="Nicepage 6.3.1, nicepage.com">
     <link id="u-theme-google-font" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,500,500i,600,600i,700,700i,800,800i">
     <link id="u-page-google-font" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu:300,300i,400,400i,500,500i,700,700i">
@@ -67,12 +71,44 @@
         </nav>
       </div></header>
 
+    {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{% if message.tags != 'error' %}{{ message.tags }}{% elif message.tags == 'error' %}danger messages{% endif %}" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% endif %}    
+
+
+  <div class="grid-container" >
+    <div class="grid-item" id ="contenedor1">
+
+      <div class="card" style="width: 18rem;">
+        <svg class="bd-placeholder-img card-img-top" width="100%" height="180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Marcador de posición: límite de imagen" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#868e96"></rect><text x="50%" y="50%" fill="#dee2e6" dy=".3em">Image cap</text></svg>
       
-{% if messages %}
-{% for message in messages %}
-    <div class="alert alert-{% if message.tags != 'error' %}{{ message.tags }}{% elif message.tags == 'error' %}danger messages{% endif %}" role="alert">{{ message }}</div>
-{% endfor %}
-{% endif %}
+        <div class="card-body">
+          <h5 class="card-title"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Distribuido</font></font></h5>
+          <p class="card-text"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Al generar el archivo Distribuido incluira: Original, EPIR, Plano.</font></font></p>
+          <a  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalArchivoPlano"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Subir archivo</font></font></a>
+        </div>
+      </div>
+
+    </div>
+    <div class="grid-item" id ="contenedor2">
+
+      <div class="card" style="width: 18rem;">
+        <svg class="bd-placeholder-img card-img-top" width="100%" height="180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Marcador de posición: límite de imagen" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#868e96"></rect><text x="50%" y="50%" fill="#dee2e6" dy=".3em">Image cap</text></svg>
+      
+        <div class="card-body">
+          <h5 class="card-title"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Almacenado</font></font></h5>
+          <p class="card-text"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Al generar archivo Almacenado incluira: Original, Almacenado.</font></font></p>
+          <a  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAlmacenado"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Subir archivo</font></font></a>
+          
+        </div>
+      </div>
+    
+    </div>
+  </div>
+
+
     <section class="u-clearfix u-section-1" id="carousel_2105">
       <div class="u-clearfix u-sheet u-sheet-1">
         <div class="data-layout-selected u-clearfix u-expanded-width u-layout-wrap u-layout-wrap-1">
@@ -83,6 +119,7 @@
                   <div class="u-container-style u-hidden-sm u-hidden-xs u-layout-cell u-size-23 u-layout-cell-1">
                     <div class="u-container-layout u-container-layout-1"></div>
                   </div>
+                  
                   <div class="u-container-style u-layout-cell u-size-14 u-layout-cell-2">
                     <div class="u-container-layout u-valign-middle u-container-layout-2">
                       <img class="u-image u-image-circle u-image-1" src="images/pexels-photo-3914752.jpg" alt="" data-image-width="1503" data-image-height="1080">
@@ -109,11 +146,11 @@
                 <div class="u-layout-row">
                   <div class="u-container-align-right u-container-style u-grey-5 u-layout-cell u-radius-50 u-shape-round u-size-23 u-layout-cell-4">
                     <div class="u-container-layout u-valign-top u-container-layout-4">
-                      <h6 class="u-align-right u-custom-font u-font-ubuntu u-text u-text-default u-text-3">Tabla resumen </h6>
+                      <h6 class="u-align-right u-custom-font u-font-ubuntu u-text u-text-default u-text-3">Proceso Distribuido </h6>
                       <p class="u-align-right u-text u-text-default u-text-grey-40 u-text-4"> While we were not the first home cleaning company in the UK, we take pride in being market.&nbsp;</p>
                       <!-- Button abrir modal -->
                       <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalArchivoPlano">
-                        Cargar
+                        Subir archivos
                       </button>
                       
                       
@@ -238,7 +275,7 @@
                         
 
                 </div>
-                <button type="submit" class="btn btn-primary">Cargar y generar</button>
+                <button type="submit" class="btn btn-primary boton">Cargar y generar</button>
                 
               </form>
             </div> 
@@ -278,7 +315,7 @@
                   <input type="number" name="uniCaja" id="uniCaja" placeholder="Unidades por caja" minlength="1"  required>     
 
                 </div>
-                <button type="submit" class="btn btn-primary">Cargar y generar</button>
+                <button type="submit" class="btn btn-primary boton" >Cargar y generar</button>
                 
               </form>
             </div> 
@@ -289,6 +326,12 @@
             
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <div class="modal" id="modal">
+        Finalizado
       </div>
     </div>
 

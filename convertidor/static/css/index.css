@@ -1,0 +1,21 @@
+.grid-container {
+    
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Divide el espacio en dos columnas de igual ancho */
+    gap: 10px; /* Espacio entre los contenedores */
+    justify-content: center; /* Centra los elementos horizontalmente */
+    align-items: center; /* Centra los elementos verticalmente */
+    height: 100vh; /* Ajusta la altura de la grilla al 100% del viewport height */
+
+  }
+  
+  .grid-item {
+    padding: 20px;
+    text-align: center;
+    border: 1px solid #000;
+  }
+
+
+
+ 
+    
