@@ -144,7 +144,7 @@
             
             <div class="container mt-5">
               
-              <form action="{% url 'convertidor:res2' %}" method="post" enctype="multipart/form-data">
+              <form action="{% url 'convertidor:res2' %}" method="post" enctype="multipart/form-data" id="Distribuido">
               {% csrf_token %}
                 <div class="mb-3">
                   <label for="archivo_excel" class="form-label">Selecciona un archivo de Excel</label>
@@ -156,7 +156,7 @@
                         
 
                 </div>
-                <button type="submit" class="btn btn-primary boton">Cargar y generar</button>
+                <button type="submit" class="btn btn-primary" >Cargar y generar</button>
                 
               </form>
             </div> 
@@ -184,7 +184,7 @@
             
             <div class="container mt-5">
               
-              <form action="{% url 'convertidor:res3' %}" method="post" enctype="multipart/form-data">
+              <form action="{% url 'convertidor:res3' %}" method="post" enctype="multipart/form-data" id="Almacenado">
               {% csrf_token %}
                 <div class="mb-3">
                   <label for="archivo_excel" class="form-label">Selecciona un archivo de Excel</label>
@@ -196,7 +196,7 @@
                   <input type="number" name="uniCaja" id="uniCaja" placeholder="Unidades por caja" minlength="1"  required>     
 
                 </div>
-                <button type="submit" class="btn btn-primary boton" >Cargar y generar</button>
+                <button type="submit" class="btn btn-primary "  >Cargar y generar</button>
                 
               </form>
             </div> 

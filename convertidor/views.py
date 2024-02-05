@@ -349,6 +349,7 @@ def res2 (request):
             # Crear la respuesta HTTP con el archivo Excel como contenido
             response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = 'attachment; filename=Distribuido.xlsx'
+            
             return response
         except Exception as e:
             messages.error(request, f"Error: {e}")
