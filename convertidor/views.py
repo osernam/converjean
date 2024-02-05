@@ -366,17 +366,27 @@ def res3 (request):
             consecutivo = request.POST['consecutivo']
             uniCaja = request.POST['uniCaja']
             
+            #DF original
+            dfOriginal = pd.read_excel(archivo)
             
-            print(ordenCompra)
-            print(linea)
-            print(df) 
+                        # Limpiar los valores no finitos
+            dfOriginal['UPC'] = dfOriginal['UPC'].fillna(0)  # Rellenar los valores NaN con 0
+            dfOriginal['UPC'] = dfOriginal['UPC'].replace([np.inf, -np.inf], 0)  # Reemplazar inf con 0
+            
+            dfOriginal['UPC'] = dfOriginal['UPC'].astype(int)
+            dfOriginal['UPC'] = dfOriginal['UPC'].round(0)
+            dfOriginal['UPC'] = dfOriginal['UPC'].astype(str)
+            dfOriginal['UPC'] = dfOriginal['UPC'].str.lstrip('-')
+            
+            
+            #Almacenado
+            
             
             #Borrar los "SubTotal"
             for x in df.index:
                     if df.loc[x, "Cod.Tienda"] == "SubTotal":
                         df.drop(x, inplace = True)
             
-            print(df)
             
             # Crear las nuevas columnas 'Talla' y 'Color'
             #df['Producto '] = df['Producto'].apply(extract_talla)
@@ -429,16 +439,28 @@ def res3 (request):
             # Eliminar los decimales
             nueva_df['Cod.Prod'] = nueva_df['Cod.Prod'].apply(lambda x: x.split('.')[0])
             
+            
+            
+            
             # Crear el archivo Excel en memoria
-            excel_buffer = io.BytesIO()
-            nueva_df.to_excel(excel_buffer, index=False)
+            # Crear un escritor de Excel usando pandas
+            excel_buffer = BytesIO()
+            writer = pd.ExcelWriter(excel_buffer, engine='xlsxwriter')
+            
+            dfOriginal.to_excel(writer, sheet_name='Original', index=False)
+            nueva_df.to_excel(writer, sheet_name='Almacenado', index=False)
+           
+            # Guardar el archivo de Excel
+            writer.close()
+            # Asegurarse de que la posición del archivo esté al principio
             excel_buffer.seek(0)
 
+            # Escribir cada DataFrame en una hoja de Excel
+            
             # Devolver el archivo Excel al usuario
             # Crear la respuesta HTTP con el archivo Excel como contenido
             response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = 'attachment; filename=Almacenado.xlsx'
-
             return response
     
         except Exception as e:
