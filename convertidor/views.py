@@ -109,7 +109,7 @@ def resumen(request):
         if request.method == 'POST' and request.FILES['archivo_excel']:
             archivo = request.FILES['archivo_excel']
             df = pd.read_excel(archivo)
-            print(df)
+            
             # Trabajar con el DataFrame de Pandas
             # Procesa los datos como desees
             
@@ -248,8 +248,24 @@ def res2 (request):
             conse= "1811045990" + consecutivo
             conse = int(conse)
             #df1['Numero Caja'] = df1.groupby('Tienda').cumcount() + 18110459900000
-            df1['Numero Caja'] = df1.groupby('Cod.Tienda').ngroup() + int(conse)
+            #df1['Numero Caja'] = df1.groupby('Cod.Tienda').ngroup() + int(conse)
             
+            # Función para extraer el color después del tercer "/"
+            def extraer_color(cadena):
+                partes = cadena.split('/')
+                if len(partes) > 3:
+                    return partes[3]
+                else:
+                    return ''
+
+            # Aplicar la función para extraer el color y agregarlo como una nueva columna
+            df1['Color'] = df1['Producto'].apply(extraer_color)
+            # Ordenar el DataFrame por las columnas "Cod.Tienda" y "Color"
+            df1 = df1.sort_values(by=['Cod.Tienda', 'Color'])
+            # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
+            df1['Numero Caja'] = df1.groupby(['Cod.Tienda', 'Color']).ngroup() + int(conse)
+            # Eliminar la columna temporal
+            df1 = df1.drop(columns=['Color'])
             # Convertir la columna a formato de cadena
             
             df1['Numero Caja'] = df1['Numero Caja'].astype(str)  
@@ -270,24 +286,24 @@ def res2 (request):
                     if df.loc[x, "Cod.Tienda"] == "SubTotal":
                         df.drop(x, inplace = True)
             
-            print(df)
+            
             
             #Ordenar por codigo de tienda
             df.sort_values(by='Cod.Tienda', inplace=True)
             
-            print(df)
+        
             
             #Eliminar columnas
             df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
             
-            print(df)
+           
             
             #Columna numero de caja
             
             consecutivo= str(consecutivo)
             conse= "1811045990" + consecutivo
             conse = int(conse)
-            print(conse)
+            
             #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
             df['Numero Caja'] = df.groupby('Cod.Tienda').ngroup() + int(conse)
             
@@ -301,11 +317,11 @@ def res2 (request):
             df['UPC'] = df['UPC'].astype(int)
             df['UPC'] = df['UPC'].astype(str)
             df['UPC'] = df['UPC'].str.lstrip('-')
-            print(df)
+            
             # Columnas para color y tallas
             
             df['Color'] = df['Producto'].str.split('/').str[3]
-            print(df)
+            
             df['Talla'] = df['Producto'].str.split('/').str[4]
             #print(df)
             
@@ -313,7 +329,7 @@ def res2 (request):
             # Crear una nueva tabla para hacer el resumen
             
             nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Numero Caja', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Numero Caja': 'first' , 'Color': 'first', })
-            print(nuevo_df)
+            
             nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
             
             # columnas Linea y Orden de compra
