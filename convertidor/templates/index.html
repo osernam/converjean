@@ -109,91 +109,6 @@
   </div>
 
 
-    <section class="u-clearfix u-section-1" id="carousel_2105">
-      <div class="u-clearfix u-sheet u-sheet-1">
-        <div class="data-layout-selected u-clearfix u-expanded-width u-layout-wrap u-layout-wrap-1">
-          <div class="u-gutter-0 u-layout">
-            <div class="u-layout-col">
-              <div class="u-size-20">
-                <div class="u-layout-row">
-                  <div class="u-container-style u-hidden-sm u-hidden-xs u-layout-cell u-size-23 u-layout-cell-1">
-                    <div class="u-container-layout u-container-layout-1"></div>
-                  </div>
-                  
-                  <div class="u-container-style u-layout-cell u-size-14 u-layout-cell-2">
-                    <div class="u-container-layout u-valign-middle u-container-layout-2">
-                      <img class="u-image u-image-circle u-image-1" src="images/pexels-photo-3914752.jpg" alt="" data-image-width="1503" data-image-height="1080">
-                    </div>
-                  </div>
-                  <div class="u-container-style u-grey-5 u-layout-cell u-radius-50 u-shape-round u-size-23 u-layout-cell-3">
-                    <div class="u-container-layout u-valign-bottom u-container-layout-3">
-                      <h6 class="u-custom-font u-font-ubuntu u-text u-text-default u-text-1">Intermedio </h6>
-                      <p class="u-text u-text-default u-text-grey-40 u-text-2"> While we were not the first home cleaning company in the UK, we take pride in being market.&nbsp;</p>
-                      
-                      <!-- Button abrir modal -->
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalArchivo1">
-                        Cargar
-                      </button>
-                      
-                      
-
-                                    
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="u-size-20">
-                <div class="u-layout-row">
-                  <div class="u-container-align-right u-container-style u-grey-5 u-layout-cell u-radius-50 u-shape-round u-size-23 u-layout-cell-4">
-                    <div class="u-container-layout u-valign-top u-container-layout-4">
-                      <h6 class="u-align-right u-custom-font u-font-ubuntu u-text u-text-default u-text-3">Proceso Distribuido </h6>
-                      <p class="u-align-right u-text u-text-default u-text-grey-40 u-text-4"> While we were not the first home cleaning company in the UK, we take pride in being market.&nbsp;</p>
-                      <!-- Button abrir modal -->
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalArchivoPlano">
-                        Subir archivos
-                      </button>
-                      
-                      
-                       
-                    </div>
-                  </div>
-                  <div class="u-container-style u-layout-cell u-size-14 u-layout-cell-5">
-                    <div class="u-container-layout u-valign-middle u-container-layout-5">
-                      <img class="u-image u-image-circle u-image-2" src="images/pexels-mohamed-abdelsadig-3196486.jpg" alt="" data-image-width="720" data-image-height="1080">
-                    </div>
-                  </div>
-                  <div class="u-container-style u-hidden-sm u-hidden-xs u-layout-cell u-size-23 u-layout-cell-6">
-                    <div class="u-container-layout u-container-layout-6"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="u-size-20">
-                <div class="u-layout-row">
-                  <div class="u-container-style u-hidden-sm u-hidden-xs u-layout-cell u-size-23 u-layout-cell-7">
-                    <div class="u-container-layout u-container-layout-7"></div>
-                  </div>
-                  <div class="u-container-style u-layout-cell u-size-14 u-layout-cell-8">
-                    <div class="u-container-layout u-valign-middle u-container-layout-8">
-                      <img class="u-image u-image-circle u-image-3" src="images/pexels-harry-shum-12694483.jpg" alt="" data-image-width="1280" data-image-height="855">
-                    </div>
-                  </div>
-                  <div class="u-container-align-left u-container-style u-grey-5 u-layout-cell u-radius-50 u-shape-round u-size-23 u-layout-cell-9">
-                    <div class="u-container-layout u-valign-top u-container-layout-9">
-                      <h6 class="u-align-left u-custom-font u-font-ubuntu u-text u-text-default u-text-5">Almacenado </h6>
-                      <p class="u-align-left u-text u-text-default u-text-grey-40 u-text-6"> While we were not the first home cleaning company in the UK, we take pride in being market.&nbsp;</p>
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAlmacenado">
-                        Cargar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    
     
     
     <footer class="u-align-center u-clearfix u-footer u-grey-80 u-footer" id="sec-04c8"><div class="u-clearfix u-sheet u-sheet-1">
@@ -214,40 +129,6 @@
 
 
 
-    <!-- Modal Archivo 1 -->
-    <!-- Modal -->
-    <div class="modal fade" id="modalArchivo1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel">Cargar Archivo de Excel</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            
-            <div class="container mt-5">
-              
-              <form action="{% url 'convertidor:res1' %}" method="post" enctype="multipart/form-data">
-              {% csrf_token %}
-                <div class="mb-3">
-                  <label for="archivo_excel" class="form-label">Selecciona un archivo de Excel</label>
-                  <input type="file" class="form-control" id="archivo_excel" name="archivo_excel" required>
-                  <input type="number" name="consecutivo" id="consecutivo" placeholder="consecutivo inicial" minlength="8" maxlength="8" required>                
-
-                </div>
-                <button type="submit" class="btn btn-primary">Cargar y generar</button>
-                
-              </form>
-            </div> 
-
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            
-          </div>
-        </div>
-      </div>
-    </div>
 
 
      <!-- Modal Archivo plano -->
