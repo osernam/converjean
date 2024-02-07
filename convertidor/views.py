@@ -258,21 +258,36 @@ def res2 (request):
                 else:
                     return ''
 
-            # Aplicar la función para extraer el color y agregarlo como una nueva columna
+            def extraer_ref(cadena):
+                partes = cadena.split('/')
+                if len(partes) > 2:
+                    return partes[2]
+                else:
+                    return ''
+
+
+            # Aplicar la función para extraer el color y referencia y agregarlo como una nueva columna
             df1['Color'] = df1['Producto'].apply(extraer_color)
+            df1['Ref'] = df1['Producto'].apply(extraer_ref)
             # Ordenar el DataFrame por las columnas "Cod.Tienda" y "Color"
-            df1 = df1.sort_values(by=['Cod.Tienda', 'Color'])
+            #df1 = df1.sort_values(by=['Ref', 'Color', 'Cod.Tienda'])
             
+       
+            df1.sort_values(by=['Ref', 'Color'], inplace=True)
             # Restablecer el índice para evitar ambigüedad
             df1 = df1.reset_index()
             # Eliminar el nombre del índice
             df1.index.name = None
-            # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
-            df1['Numero Caja'] = df1.groupby(['Cod.Tienda', 'Color']).ngroup() + int(conse)
             
+            # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
+            df1['Numero Caja'] = df1.groupby(['Ref', 'Color', 'Cod.Tienda']).ngroup() + int(conse)
             
             # Eliminar la columna temporal
-            df1 = df1.drop(columns=['Color'])
+            df1 = df1.drop(columns=['Color'])           
+            df1 = df1.drop(columns=['Ref'])
+            
+            
+            
             # Convertir la columna a formato de cadena
             
             df1['Numero Caja'] = df1['Numero Caja'].astype(str)  
@@ -307,20 +322,30 @@ def res2 (request):
             df['Color'] = df['Producto'].str.split('/').str[3]
             
             df['Talla'] = df['Producto'].str.split('/').str[4]
+            df['Ref'] = df['Producto'].str.split('/').str[2]
             #print(df)
+            
             
            
             #Ordenar por Color
-            df.sort_values(by='Color', inplace=True)
-            
+            df.sort_values(by=['Ref','Color'], inplace=True)
+            #df['Numero Caja copia'] = df1['Numero Caja']
             
              #Columna numero de caja
             consecutivo= str(consecutivo)
             conse= "1811045990" + consecutivo
             conse = int(conse)
             
+            # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
+            df['Numero Caja'] = df.groupby(['Ref', 'Color', 'Cod.Tienda']).ngroup() + int(conse)
+                    
+                    
+                    #Igual que el EPIR
+                    
                     
             #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
+            
+            
             #df['Numero Caja'] = df.groupby('Color').ngroup() + int(conse)
             
             # Convertir la columna a formato de cadena
@@ -328,18 +353,19 @@ def res2 (request):
             
             df['Cod.Prod'] = df['Cod.Prod'].astype(int)
             df['Cod.Prod'] = df['Cod.Prod'].astype(str)
+            
             # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
             df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
             df['UPC'] = df['UPC'].astype(int)
             df['UPC'] = df['UPC'].astype(str)
             df['UPC'] = df['UPC'].str.lstrip('-')
+            df['Numero Caja'] = df['Numero Caja'].astype(str)
             
             
-            
-            
+            #nuevo_df = nuevo_df.merge(df1[['Cod.Tienda', 'Color', 'Numero Caja']], on=['Cod.Tienda', 'Color'], how='left')
             # Crear una nueva tabla para hacer el resumen
             
-            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', })
+            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
             
             nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
             
@@ -355,12 +381,11 @@ def res2 (request):
             #Ordenar por Color
             
             nuevo_df['Color2'] = nuevo_df['Color']  # Create a copy of the "Color" column
-            nuevo_df.sort_values(by='Color2', inplace=True)  # Sort the DataFrame by the "Color2" column
+            nuevo_df['Referencia'] = nuevo_df['Ref']  # Create a copy of the "Ref" column
+            nuevo_df.sort_values(by=['Referencia', 'Color2'], inplace=True)  # Sort the DataFrame by the "Color2" column
             nuevo_df.drop(columns=['Color2'], inplace=True)  # Drop the "Color2" column
-            # Incrementar el consecutivo por cada fila
-            nuevo_df['Numero Caja'] = range(conse, conse + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
-            nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
-            
+            nuevo_df.drop(columns=['Referencia'], inplace=True)  # Drop the "Referencia" column
+           
             
             
             # Crear el archivo Excel en memoria
@@ -412,7 +437,7 @@ def res2suma(request):
            # Columnas para color y tallas
             
             df['Color'] = df['Producto'].str.split('/').str[3]
-            
+            df['Ref'] = df['Producto'].str.split('/').str[2]
             df['Talla'] = df['Producto'].str.split('/').str[4]
             
         
@@ -421,16 +446,19 @@ def res2suma(request):
             
            
             #Ordenar por Color
-            df.sort_values(by='Color', inplace=True)
+            df.sort_values(by=['Ref', 'Color'], inplace=True)
             
             
              #Columna numero de caja
             consecutivo = df['Numero Caja'].iloc[0]
-            df.drop(columns='Numero Caja', inplace=True)
+            #df.drop(columns='Numero Caja', inplace=True)
             
             consecutivo= int(consecutivo)
             
             
+            
+            
+            #df.dropna(columns=['Ref'], inplace=True)
             # Convertir la columna a formato de cadena
             
             
@@ -442,12 +470,12 @@ def res2suma(request):
             df['UPC'] = df['UPC'].astype(str)
             df['UPC'] = df['UPC'].str.lstrip('-')
             
-            
+            df['Numero Caja'] = df['Numero Caja'].astype(str)
             
             
             # Crear una nueva tabla para hacer el resumen
             
-            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', })
+            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first', 'Numero Caja': 'first'})
             
             nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
             
@@ -464,11 +492,13 @@ def res2suma(request):
             #Ordenar por Color
             
             nuevo_df['Color2'] = nuevo_df['Color']  # Create a copy of the "Color" column
-            nuevo_df.sort_values(by='Color2', inplace=True)  # Sort the DataFrame by the "Color2" column
-            nuevo_df.drop(columns=['Color2'], inplace=True)  # Drop the "Color2" column
+            nuevo_df['Referencia']= nuevo_df['Ref']
+            nuevo_df.sort_values(by=['Referencia', 'Color2'], inplace=True)  # Sort the DataFrame by the "Color2" column
+            nuevo_df.drop(columns=['Color2', 'Referencia'], inplace=True)  # Drop the "Color2" column
+            
             # Incrementar el consecutivo por cada fila
-            nuevo_df['Numero Caja'] = range(consecutivo, consecutivo + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
-            nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
+            #nuevo_df['Numero Caja'] = range(consecutivo, consecutivo + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
+            #nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
             
             
             excel_buffer = BytesIO()
