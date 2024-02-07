@@ -88,8 +88,21 @@
       
         <div class="card-body">
           <h5 class="card-title"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Distribuido</font></font></h5>
-          <p class="card-text"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Al generar el archivo Distribuido incluirá: Original, EPIR, Plano.</font></font></p>
+          <p class="card-text"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Al generar el archivo Distribuido incluirá: Original, EPIR,Plano .</font></font></p>
           <a  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalArchivoPlano"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Subir archivo</font></font></a>
+        </div>
+      </div>
+
+
+      <div class="card" style="width: 18rem;">
+        <svg class="bd-placeholder-img card-img-top" width="100%" height="180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Imagen" preserveAspectRatio="xMidYMid slice" focusable="false">
+          <image href="{% static 'img/calculadora.png' %}" width="100%" height="100%" />
+        </svg>
+      
+        <div class="card-body">
+          <h5 class="card-title"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Recalcular Distribuido</font></font></h5>
+          <p class="card-text"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Contiene el archivo Plano modificado segun los nuevos datos del EPIR.</font></font></p>
+          <a  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalRecalcularPlano"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Subir archivo</font></font></a>
         </div>
       </div>
 
@@ -159,6 +172,43 @@
                   <input type="text" name="ordenCompra" id="ordenCompra" placeholder="Orden de compra" required>
                   <input type="text" name="consecutivo" id="consecutivo" placeholder="consecutivo inicial" minlength="8" maxlength="8" required>
                         
+
+                </div>
+                <button type="submit" class="btn btn-primary" >Cargar y generar</button>
+                
+              </form>
+            </div> 
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+         <!-- Modal Recalcular plano -->
+    <!-- Modal -->
+    <div class="modal fade" id="modalRecalcularPlano" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Cargar Archivo de Excel</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            
+            <div class="container mt-5">
+              
+              <form action="{% url 'convertidor:res2suma' %}" method="post" enctype="multipart/form-data" id="Distribuido">
+              {% csrf_token %}
+                <div class="mb-3">
+                  <label for="archivo_excel" class="form-label">Selecciona un archivo de Excel</label>
+                  <input type="file" class="form-control" id="archivo_excel" name="archivo_excel" required>
+                       
 
                 </div>
                 <button type="submit" class="btn btn-primary" >Cargar y generar</button>

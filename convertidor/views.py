@@ -236,7 +236,7 @@ def res2 (request):
             
             
             #Ordenar por codigo de tienda
-            df1.sort_values(by='Cod.Tienda', inplace=True)
+            #df1.sort_values(by='Cod.Tienda', inplace=True)
             
             #Eliminar columnas
             df1.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
@@ -262,8 +262,15 @@ def res2 (request):
             df1['Color'] = df1['Producto'].apply(extraer_color)
             # Ordenar el DataFrame por las columnas "Cod.Tienda" y "Color"
             df1 = df1.sort_values(by=['Cod.Tienda', 'Color'])
+            
+            # Restablecer el índice para evitar ambigüedad
+            df1 = df1.reset_index()
+            # Eliminar el nombre del índice
+            df1.index.name = None
             # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
             df1['Numero Caja'] = df1.groupby(['Cod.Tienda', 'Color']).ngroup() + int(conse)
+            
+            
             # Eliminar la columna temporal
             df1 = df1.drop(columns=['Color'])
             # Convertir la columna a formato de cadena
@@ -279,7 +286,7 @@ def res2 (request):
             
             
             
-            #Tabla Almacenado
+            #Tabla Distribuido
             
             #Borrar los "SubTotal"
             for x in df.index:
@@ -288,24 +295,33 @@ def res2 (request):
             
             
             
-            #Ordenar por codigo de tienda
-            df.sort_values(by='Cod.Tienda', inplace=True)
+            
             
         
             
             #Eliminar columnas
             df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
             
+           # Columnas para color y tallas
+            
+            df['Color'] = df['Producto'].str.split('/').str[3]
+            
+            df['Talla'] = df['Producto'].str.split('/').str[4]
+            #print(df)
+            
            
+            #Ordenar por Color
+            df.sort_values(by='Color', inplace=True)
             
-            #Columna numero de caja
             
+             #Columna numero de caja
             consecutivo= str(consecutivo)
             conse= "1811045990" + consecutivo
             conse = int(conse)
             
+                    
             #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
-            df['Numero Caja'] = df.groupby('Cod.Tienda').ngroup() + int(conse)
+            #df['Numero Caja'] = df.groupby('Color').ngroup() + int(conse)
             
             # Convertir la columna a formato de cadena
             
@@ -318,17 +334,12 @@ def res2 (request):
             df['UPC'] = df['UPC'].astype(str)
             df['UPC'] = df['UPC'].str.lstrip('-')
             
-            # Columnas para color y tallas
             
-            df['Color'] = df['Producto'].str.split('/').str[3]
-            
-            df['Talla'] = df['Producto'].str.split('/').str[4]
-            #print(df)
             
             
             # Crear una nueva tabla para hacer el resumen
             
-            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Numero Caja', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Numero Caja': 'first' , 'Color': 'first', })
+            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', })
             
             nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
             
@@ -339,6 +350,13 @@ def res2 (request):
             
             #Numero de caja
             
+            # Ordenar el DataFrame por la columna  "Color"
+            #nuevo_df = nuevo_df.sort_values(by='Color')
+            #Ordenar por Color
+            
+            nuevo_df['Color2'] = nuevo_df['Color']  # Create a copy of the "Color" column
+            nuevo_df.sort_values(by='Color2', inplace=True)  # Sort the DataFrame by the "Color2" column
+            nuevo_df.drop(columns=['Color2'], inplace=True)  # Drop the "Color2" column
             # Incrementar el consecutivo por cada fila
             nuevo_df['Numero Caja'] = range(conse, conse + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
             nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
@@ -349,9 +367,115 @@ def res2 (request):
             # Crear un escritor de Excel usando pandas
             excel_buffer = BytesIO()
             writer = pd.ExcelWriter(excel_buffer, engine='xlsxwriter')
-            
+            df1.drop('index', axis=1, inplace=True)
             dfOriginal.to_excel(writer, sheet_name='Original', index=False)
             df1.to_excel(writer, sheet_name='EPIR', index=False)
+            nuevo_df.to_excel(writer, sheet_name='Plano', index=False)
+
+            # Guardar el archivo de Excel
+            writer.close()
+
+            # Asegurarse de que la posición del archivo esté al principio
+            excel_buffer.seek(0)
+
+            # Crear la respuesta HTTP con el archivo Excel como contenido
+            response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=Distribuido.xlsx'
+            return response
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+        return redirect('convertidor:home')
+    
+def res2suma(request):
+    
+    if request.method == 'POST':
+        try:
+            archivo = request.FILES['archivo_excel']
+            
+            xls = pd.ExcelFile(archivo)
+
+            # Obtener los nombres de las hojas en el archivo de Excel
+            nombreHojas = xls.sheet_names
+
+            # Crear un DataFrame separado para cada hoja
+            dfHoja1 = pd.read_excel(xls, nombreHojas[0])
+            dfHoja2 = pd.read_excel(xls, nombreHojas[1])
+            dfHoja3 = pd.read_excel(xls, nombreHojas[2])
+            
+            df=dfHoja2
+            #Calcular el archivo plano nuevamente
+            
+            
+                        #Tabla Distribuido       
+            
+            
+           # Columnas para color y tallas
+            
+            df['Color'] = df['Producto'].str.split('/').str[3]
+            
+            df['Talla'] = df['Producto'].str.split('/').str[4]
+            
+        
+            linea = dfHoja3['Linea'].iloc[0]            
+            ordenCompra = dfHoja3['Orden de Compra'].iloc[0]
+            
+           
+            #Ordenar por Color
+            df.sort_values(by='Color', inplace=True)
+            
+            
+             #Columna numero de caja
+            consecutivo = df['Numero Caja'].iloc[0]
+            df.drop(columns='Numero Caja', inplace=True)
+            
+            consecutivo= int(consecutivo)
+            
+            
+            # Convertir la columna a formato de cadena
+            
+            
+            df['Cod.Prod'] = df['Cod.Prod'].astype(int)
+            df['Cod.Prod'] = df['Cod.Prod'].astype(str)
+            # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
+            df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
+            df['UPC'] = df['UPC'].astype(int)
+            df['UPC'] = df['UPC'].astype(str)
+            df['UPC'] = df['UPC'].str.lstrip('-')
+            
+            
+            
+            
+            # Crear una nueva tabla para hacer el resumen
+            
+            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', })
+            
+            nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
+            
+            # columnas Linea y Orden de compra
+            
+            nuevo_df['Linea'] = linea
+            nuevo_df['Orden de Compra'] = ordenCompra
+            
+            
+            #Numero de caja
+            
+            # Ordenar el DataFrame por la columna  "Color"
+            #nuevo_df = nuevo_df.sort_values(by='Color')
+            #Ordenar por Color
+            
+            nuevo_df['Color2'] = nuevo_df['Color']  # Create a copy of the "Color" column
+            nuevo_df.sort_values(by='Color2', inplace=True)  # Sort the DataFrame by the "Color2" column
+            nuevo_df.drop(columns=['Color2'], inplace=True)  # Drop the "Color2" column
+            # Incrementar el consecutivo por cada fila
+            nuevo_df['Numero Caja'] = range(consecutivo, consecutivo + len(nuevo_df))  # Usar la función range para generar una secuencia de valores consecutivos
+            nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
+            
+            
+            excel_buffer = BytesIO()
+            writer = pd.ExcelWriter(excel_buffer, engine='xlsxwriter')
+            
+            dfHoja1.to_excel(writer, sheet_name='Original', index=False)
+            dfHoja2.to_excel(writer, sheet_name='EPIR', index=False)
             nuevo_df.to_excel(writer, sheet_name='Plano', index=False)
            
             # Guardar el archivo de Excel
@@ -367,9 +491,14 @@ def res2 (request):
             response['Content-Disposition'] = 'attachment; filename=Distribuido.xlsx'
             
             return response
+            
+            
         except Exception as e:
             messages.error(request, f"Error: {e}")
         return redirect('convertidor:home')
+
+
+    return redirect('convertidor:home')
 
 def res3 (request):
     #Almacenado

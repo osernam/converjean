@@ -5,8 +5,8 @@ app_name = "convertidor"
 
 urlpatterns = [
     path('', views.homeView, name='home'),
-    path('res1/', views.res1, name='res1'),
     path('res2/', views.res2, name='res2'),
+    path('res2suma/', views.res2suma, name='res2suma'),
     path('res3/', views.res3, name='res3'),
     
     

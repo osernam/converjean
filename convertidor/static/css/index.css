@@ -10,9 +10,17 @@
   }
   
   .grid-item {
-    padding: 20px;
+    display: flex;
+    padding: 10px;
     text-align: center;
     border: 1px solid #000;
+  }
+
+  .card {
+    margin: 5px;
+    padding: 10px;
+    border: 1px solid rgb(0, 0, 0);
+  
   }
 
 
