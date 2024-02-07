@@ -474,8 +474,13 @@ def res2suma(request):
             excel_buffer = BytesIO()
             writer = pd.ExcelWriter(excel_buffer, engine='xlsxwriter')
             
+            hojaDos= pd.read_excel(xls, nombreHojas[1])
+            hojaDos.reset_index(drop=True, inplace=True)
+            hojaDos['Numero Caja'] = hojaDos['Numero Caja'].astype(str)
+            #hojaDos.drop(columns=['Unnamed: 0', 'index'], inplace=True)
+            
             dfHoja1.to_excel(writer, sheet_name='Original', index=False)
-            dfHoja2.to_excel(writer, sheet_name='EPIR', index=False)
+            hojaDos.to_excel(writer, sheet_name='EPIR', index=False)
             nuevo_df.to_excel(writer, sheet_name='Plano', index=False)
            
             # Guardar el archivo de Excel
@@ -488,7 +493,7 @@ def res2suma(request):
             # Devolver el archivo Excel al usuario
             # Crear la respuesta HTTP con el archivo Excel como contenido
             response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename=Distribuido.xlsx'
+            response['Content-Disposition'] = 'attachment; filename=DistribuidoR.xlsx'
             
             return response
             

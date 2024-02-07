@@ -1,0 +1,5 @@
+cd C:\Users\osern\OneDrive\Documentos\Nelson\instalacion2\instalar\converjean
+pip install -r requirements.txt
+python manage.py runserver
+
+
