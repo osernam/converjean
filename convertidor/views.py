@@ -571,6 +571,7 @@ def res3 (request):
             
             # Crear las nuevas columnas 'Talla' y 'Color'
             #df['Producto '] = df['Producto'].apply(extract_talla)
+            
             df.insert(6, 'Producto ', df['Producto'].apply(extract_talla))
             df['Color'] = df['Producto'].apply(extract_color)
 
@@ -582,18 +583,18 @@ def res3 (request):
             nueva_tabla = []
 
             for index, row in df.iterrows():
-                unidades = row['Emp. Pendiente']
+                unidades = row['Cant.Distrib']
                 capacidad_caja = int(uniCaja)  # Capacidad de la caja (reemplaza con el valor real)
                 
                 while unidades > 0:
                     if unidades >= capacidad_caja:
                         nueva_fila = row.copy()
-                        nueva_fila['Emp. Pendiente'] = capacidad_caja
+                        nueva_fila['Cant.Distrib'] = capacidad_caja
                         nueva_tabla.append(nueva_fila)
                         unidades -= capacidad_caja
                     else:
                         nueva_fila = row.copy()
-                        nueva_fila['Emp. Pendiente'] = unidades
+                        nueva_fila['Cant.Distrib'] = unidades
                         nueva_tabla.append(nueva_fila)
                         break
 
@@ -610,6 +611,7 @@ def res3 (request):
             nueva_df['Linea'] = linea
             nueva_df['Orden de Compra'] = ordenCompra
             
+            nueva_df = nueva_df.sort_values(by=['Color', 'Producto '])
             #Convertir columnas a string para evitar el formato de excel
             nueva_df['Numero Caja'] = nueva_df['Numero Caja'].astype(str)
             nueva_df['UPC'] = nueva_df['UPC'].astype(str)
@@ -619,6 +621,8 @@ def res3 (request):
             nueva_df['Cod.Prod'] = nueva_df['Cod.Prod'].astype(str)
             # Eliminar los decimales
             nueva_df['Cod.Prod'] = nueva_df['Cod.Prod'].apply(lambda x: x.split('.')[0])
+            
+            nueva_df= nueva_df.drop(['Cant.Recibida','Cant.Pendiente','Emp. Pendiente'], axis=1)
             
             
             
@@ -662,12 +666,23 @@ def extract_talla(cadena):
         return None
 
 def extract_color(cadena):
-    words = cadena.split()  # Dividir la cadena en palabras
-    if len(words) >= 4:
-        color_index = 3  # El color está después del tercer espacio
-        talla_index = -1  # El índice de la talla es el último elemento
-        color = " ".join(words[color_index:talla_index])  # Unir las palabras para formar el color
-        return color
-    else:
-        return None
+    
+    for char in cadena:
+        if char == '/':
+            
+            words = cadena.split('/')  # Dividir la cadena en palabras usando '/'
+            color = words[3]  # El color es el 4 elemento después de dividir
+            return color
+        
+        elif char == ' ':
+           
+            words = cadena.split()  # Dividir la cadena en palabras
+            if len(words) >= 4:
+                color_index = 3  # El color está después del tercer espacio
+                talla_index = -1  # El índice de la talla es el último elemento
+                color = " ".join(words[color_index:talla_index])  # Unir las palabras para formar el color
+                return color
+            
+            else:
+                return None
 
