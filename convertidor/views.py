@@ -554,12 +554,15 @@ def res3 (request):
             dfOriginal['UPC'] = dfOriginal['UPC'].fillna(0)  # Rellenar los valores NaN con 0
             dfOriginal['UPC'] = dfOriginal['UPC'].replace([np.inf, -np.inf], 0)  # Reemplazar inf con 0
             
-            dfOriginal['UPC'] = dfOriginal['UPC'].astype(int)
-            dfOriginal['UPC'] = dfOriginal['UPC'].round(0)
+            #dfOriginal['UPC'] = dfOriginal['UPC'].astype(int)
+            #dfOriginal['UPC'] = dfOriginal['UPC'].round(0)
+            # Eliminar los decimales
+            
             dfOriginal['UPC'] = dfOriginal['UPC'].astype(str)
+            dfOriginal['UPC'] = dfOriginal['UPC'].apply(lambda x: x.split('.')[0])
             dfOriginal['UPC'] = dfOriginal['UPC'].str.lstrip('-')
             
-            
+            print(dfOriginal)
             #Almacenado
             
             
@@ -583,18 +586,18 @@ def res3 (request):
             nueva_tabla = []
 
             for index, row in df.iterrows():
-                unidades = row['Cant.Distrib']
+                unidades = row['Emp. Pendiente']
                 capacidad_caja = int(uniCaja)  # Capacidad de la caja (reemplaza con el valor real)
                 
                 while unidades > 0:
                     if unidades >= capacidad_caja:
                         nueva_fila = row.copy()
-                        nueva_fila['Cant.Distrib'] = capacidad_caja
+                        nueva_fila['Emp. Pendiente'] = capacidad_caja
                         nueva_tabla.append(nueva_fila)
                         unidades -= capacidad_caja
                     else:
                         nueva_fila = row.copy()
-                        nueva_fila['Cant.Distrib'] = unidades
+                        nueva_fila['Emp. Pendiente'] = unidades
                         nueva_tabla.append(nueva_fila)
                         break
 
@@ -604,14 +607,15 @@ def res3 (request):
             consecutivo= str(consecutivo)
             conse= "1811045990" + consecutivo
             conse = int(conse)
-            # Incrementar el consecutivo por cada fila
-            nueva_df['Numero Caja'] = range(conse, conse + len(nueva_df))  # Usar la función range para generar una secuencia de valores consecutivos
             
             # columnas Linea y Orden de compra
             nueva_df['Linea'] = linea
             nueva_df['Orden de Compra'] = ordenCompra
             
             nueva_df = nueva_df.sort_values(by=['Color', 'Producto '])
+            # Incrementar el consecutivo por cada fila
+            nueva_df['Numero Caja'] = range(conse, conse + len(nueva_df))  # Usar la función range para generar una secuencia de valores consecutivos
+            
             #Convertir columnas a string para evitar el formato de excel
             nueva_df['Numero Caja'] = nueva_df['Numero Caja'].astype(str)
             nueva_df['UPC'] = nueva_df['UPC'].astype(str)
@@ -622,7 +626,7 @@ def res3 (request):
             # Eliminar los decimales
             nueva_df['Cod.Prod'] = nueva_df['Cod.Prod'].apply(lambda x: x.split('.')[0])
             
-            nueva_df= nueva_df.drop(['Cant.Recibida','Cant.Pendiente','Emp. Pendiente'], axis=1)
+            nueva_df= nueva_df.drop(['Cant.Recibida','Cant.Pendiente','Cant.Distrib'], axis=1, errors = 'ignore')
             
             
             
