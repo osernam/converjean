@@ -27,122 +27,9 @@ def homeView(request):
 
 
 
-def cargar_archivo_excel(request):
-    if request.method == 'POST' and request.FILES['archivo_excel']:
-        archivo = request.FILES['archivo_excel']
-        df = pd.read_excel(archivo)
-        # Trabajar con el DataFrame de Pandas
-        # Procesa los datos como desees
-        
-        # Leer el archivo de Excel en un DataFrame
-        #df = pd.read_excel('almacenamiento_jeans.xlsx')
-
-        # Crear una nueva columna para el color extrayendo la subcadena "AZC" de la columna "Producto"
-        df['Color'] = df['Producto'].str.extract(r'AZC/(\w+)')
-
-        # Agrupar por tienda y color, y combinar las tallas en una sola entrada
-        df_grouped = df.groupby(['Cod.Tienda', 'Color', 'Cod.Producto', 'UPC', 'Cod.Provee']).agg({'Producto': lambda x: ', '.join(x)})
-
-        # Realizar cálculos para obtener el UPC final, la suma de cantidades y conservar las columnas requeridas
-        df_result = df_grouped.reset_index()
-        # Agrega el último UPC del producto
-        df_result['UPC_final'] = df.groupby('Cod.Producto')['UPC'].last()
-        # Suma de cantidades del conjunto de tallas
-        df_result['Emp.Pendiente'] = df.groupby(['Cod.Tienda', 'Color', 'Cod.Producto', 'Cod.Provee'])['Emp.Pendiente'].sum()
-
-        # Crear una nueva tabla con los resultados
-        nueva_tabla = df_result[['Cod.Tienda', 'Cod.Producto', 'UPC_final', 'Producto', 'Cod.Provee', 'Emp.Pendiente', 'Color']]
-
-        nueva_tabla.to_excel('nueva_tabla_jeans.xlsx', index=False)
-        
-        # Crear la respuesta HTTP con el archivo adjunto
-        nombre_archivo = 'nueva_tabla_jeans.xlsx'  # Nombre del archivo de Excel
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
-
-        # Leer el archivo de Excel y escribir su contenido en la respuesta HTTP
-        with open(nombre_archivo, 'rb') as excel_file:
-            response.write(excel_file.read())
-
-        return response 
-    return HttpResponse('Error en la carga del archivo')
 
 
-def resultadosJeansFinal(df):
-   
 
-    # Leer el archivo de Excel en un DataFrame
-    df = pd.read_excel('almacenamiento_jeans.xlsx')
-
-    # Crear una nueva columna para el color extrayendo la subcadena "AZC" de la columna "Producto"
-    df['Color'] = df['Producto'].str.extract(r'AZC/(\w+)')
-
-    # Agrupar por tienda y color, y combinar las tallas en una sola entrada
-    df_grouped = df.groupby(['Cod.Tienda', 'Color', 'Cod.Producto', 'UPC', 'Cod.Provee']).agg({'Producto': lambda x: ', '.join(x)})
-
-    # Realizar cálculos para obtener el UPC final, la suma de cantidades y conservar las columnas requeridas
-    df_result = df_grouped.reset_index()
-    # Agrega el último UPC del producto
-    df_result['UPC_final'] = df.groupby('Cod.Producto')['UPC'].last()
-    # Suma de cantidades del conjunto de tallas
-    df_result['Emp.Pendiente'] = df.groupby(['Cod.Tienda', 'Color', 'Cod.Producto', 'Cod.Provee'])['Emp.Pendiente'].sum()
-
-    # Crear una nueva tabla con los resultados
-    nueva_tabla = df_result[['Cod.Tienda', 'Cod.Producto', 'UPC_final', 'Producto', 'Cod.Provee', 'Emp.Pendiente', 'Color']]
-
-    nueva_tabla.to_excel('nueva_tabla_jeans.xlsx', index=False)
-    
-    # Crear la respuesta HTTP con el archivo adjunto
-    nombre_archivo = 'nueva_tabla_jeans.xlsx'  # Nombre del archivo de Excel
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
-
-    # Leer el archivo de Excel y escribir su contenido en la respuesta HTTP
-    with open(nombre_archivo, 'rb') as excel_file:
-        response.write(excel_file.read())
-
-    return response
-
-def resumen(request):
-    try:
-        
-        if request.method == 'POST' and request.FILES['archivo_excel']:
-            archivo = request.FILES['archivo_excel']
-            df = pd.read_excel(archivo)
-            
-            # Trabajar con el DataFrame de Pandas
-            # Procesa los datos como desees
-            
-            #Eliminar filas que contengan la palabra "SubTotal"
-            for x in df.index:
-                if df.loc[x, "Cod.Tienda"] == "SubTotal":
-                    df.drop(x, inplace = True)
-            
-            # Leer el archivo de Excel en un DataFrame
-            #df = pd.read_excel('almacenamiento_jeans.xlsx')
-
-            # Crear una nueva columna para el color extrayendo la subcadena del color de la columna "Producto"
-            #df['Color'] = df['Producto'].str.split('/').str[3]
-            
-            # Crear un nuevo archivo Excel con el DataFrame modificado
-            with NamedTemporaryFile() as temp:
-                with pd.ExcelWriter(temp.name, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, index=False, sheet_name='Sheet1')
-
-                temp.seek(0)
-
-                # Crear una FileResponse con el archivo adjunto para descargar
-                response = FileResponse(open(temp.name, 'rb'), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                response['Content-Disposition'] = 'attachment; filename=nuevo_resumen.xlsx'
-
-                return response  # Devolver la FileResponse con el archivo adjunto para descargar
-                
-
-        
-    except Exception as e:
-        messages.error(request, f"Error: {e}")
-    return HttpResponse('Error en la carga del archivo')
-    
 def res1(request):
     
     #EPIR
@@ -182,7 +69,7 @@ def res1(request):
         
         df1['Numero Caja'] = df1['Numero Caja'].astype(str)  
         df1['Cod.Prod'] = df1['Cod.Prod'].astype(str)
-        df1['UPC'] = df1['UPC'].astype(int)
+        
         
         df1['UPC'] = df1['UPC'].astype(str)
         # Descargar el DataFrame como un archivo Excel
@@ -219,11 +106,12 @@ def res2 (request):
             dfOriginal['UPC'] = dfOriginal['UPC'].fillna(0)  # Rellenar los valores NaN con 0
             dfOriginal['UPC'] = dfOriginal['UPC'].replace([np.inf, -np.inf], 0)  # Reemplazar inf con 0
             
-            dfOriginal['UPC'] = dfOriginal['UPC'].astype(int)
-            dfOriginal['UPC'] = dfOriginal['UPC'].round(0)
+            # Eliminar los decimales          
             dfOriginal['UPC'] = dfOriginal['UPC'].astype(str)
+            dfOriginal['UPC'] = dfOriginal['UPC'].apply(lambda x: x.split('.')[0])
             dfOriginal['UPC'] = dfOriginal['UPC'].str.lstrip('-')
             
+           
             
             #Tabla Epir
             df1 = pd.read_excel(archivo)
@@ -295,9 +183,6 @@ def res2 (request):
             df1['Cod.Prod'] = df1['Cod.Prod'].astype(str)
             df1['Cod.Prod'] = df1['Cod.Prod'].str.lstrip('-')
             
-            df1['UPC'] = df1['UPC'].astype(int)            
-            df1['UPC'] = df1['UPC'].astype(str)
-            df1['UPC'] = df1['UPC'].str.lstrip('-')
             
             
             
@@ -310,8 +195,11 @@ def res2 (request):
             
             
             
-            
-            
+            # Eliminar los decimales
+            df1['UPC'] = df1['UPC'].astype(str)
+            df1['UPC'] = df1['UPC'].apply(lambda x: x.split('.')[0])
+            df1['UPC'] = df1['UPC'].str.lstrip('-')
+                       
         
             
             #Eliminar columnas
@@ -356,9 +244,14 @@ def res2 (request):
             
             # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
             df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
-            df['UPC'] = df['UPC'].astype(int)
+           
+            
+            # Eliminar los decimales
             df['UPC'] = df['UPC'].astype(str)
+            df['UPC'] = df['UPC'].apply(lambda x: x.split('.')[0])
             df['UPC'] = df['UPC'].str.lstrip('-')
+            
+            
             df['Numero Caja'] = df['Numero Caja'].astype(str)
             
             
@@ -466,9 +359,13 @@ def res2suma(request):
             df['Cod.Prod'] = df['Cod.Prod'].astype(str)
             # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
             df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
-            df['UPC'] = df['UPC'].astype(int)
+            
+            # Eliminar los decimales
             df['UPC'] = df['UPC'].astype(str)
+            df['UPC'] = df['UPC'].apply(lambda x: x.split('.')[0])
             df['UPC'] = df['UPC'].str.lstrip('-')
+            
+            
             
             df['Numero Caja'] = df['Numero Caja'].astype(str)
             
@@ -562,7 +459,7 @@ def res3 (request):
             dfOriginal['UPC'] = dfOriginal['UPC'].apply(lambda x: x.split('.')[0])
             dfOriginal['UPC'] = dfOriginal['UPC'].str.lstrip('-')
             
-            print(dfOriginal)
+            #print(dfOriginal)
             #Almacenado
             
             
