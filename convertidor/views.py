@@ -170,6 +170,23 @@ def res2 (request):
             # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
             df1['Numero Caja'] = df1.groupby(['Ref', 'Color', 'Cod.Tienda']).ngroup() + int(conse)
             
+            #Si la tienda es 9903 asignarle un consecutivo individual a los elementos del grupo
+            for index, (tienda, caja) in enumerate(zip(df1['Cod.Tienda'], df1['Numero Caja'])):
+                if tienda == 9903:
+                    start_index = index + 1
+                    
+                    index += 1
+                    if df1.loc[index, 'Cod.Tienda'] == 9903:
+                        df1.at[index, 'Numero Caja'] = caja
+                    
+                    if start_index < len(df1):
+                        if df1.loc[index, 'Cod.Tienda'] == 9903:
+                            df1.loc[start_index:, 'Numero Caja'] += 1
+            
+            print("EPIR")
+            print(df1)       
+               
+            
             # Eliminar la columna temporal
             df1 = df1.drop(columns=['Color'])           
             df1 = df1.drop(columns=['Ref'])
@@ -200,7 +217,7 @@ def res2 (request):
             df1['UPC'] = df1['UPC'].apply(lambda x: x.split('.')[0])
             df1['UPC'] = df1['UPC'].str.lstrip('-')
                        
-        
+            
             
             #Eliminar columnas
             df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
@@ -211,14 +228,16 @@ def res2 (request):
             
             df['Talla'] = df['Producto'].str.split('/').str[4]
             df['Ref'] = df['Producto'].str.split('/').str[2]
-            #print(df)
+            
             
             
            
             #Ordenar por Color
             df.sort_values(by=['Ref','Color'], inplace=True)
             #df['Numero Caja copia'] = df1['Numero Caja']
-            
+            #df = df1.reset_index()
+            # Eliminar el nombre del índice
+            #df.index.name = None
              #Columna numero de caja
             consecutivo= str(consecutivo)
             conse= "1811045990" + consecutivo
@@ -226,8 +245,22 @@ def res2 (request):
             
             # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
             df['Numero Caja'] = df.groupby(['Ref', 'Color', 'Cod.Tienda']).ngroup() + int(conse)
+             
+             #Si la tienda es 9903 asignarle un consecutivo individual a los elementos del grupo
+            for index, (tienda, caja) in enumerate(zip(df['Cod.Tienda'], df['Numero Caja'])):
+                if tienda == 9903:
+                    start_index = index + 1
                     
+                    index += 1
+                    if df.loc[index, 'Cod.Tienda'] == 9903:
+                        df.at[index, 'Numero Caja'] = caja
                     
+                    if start_index < len(df):
+                        if df.loc[index, 'Cod.Tienda'] == 9903:
+                            df.loc[start_index:, 'Numero Caja'] += 1       
+                    
+            print("Plano")
+            print (df)
                     #Igual que el EPIR
                     
                     
@@ -258,7 +291,15 @@ def res2 (request):
             #nuevo_df = nuevo_df.merge(df1[['Cod.Tienda', 'Color', 'Numero Caja']], on=['Cod.Tienda', 'Color'], how='left')
             # Crear una nueva tabla para hacer el resumen
             
+            #nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
+            
             nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
+            
+            #merged_df = nuevo_df.merge(df[['Cod.Tienda', 'Color', 'Numero Caja']], on=['Cod.Tienda', 'Color'], how='left')
+            #merged_df['Numero Caja'] = merged_df['Numero Caja_y'].fillna(merged_df['Numero Caja_x'])
+            #nuevo_df['Numero Caja'] = merged_df['Numero Caja']
+            
+            
             
             nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
             
