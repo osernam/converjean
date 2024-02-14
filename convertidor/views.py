@@ -92,94 +92,103 @@ def res2 (request):
     #Original, EPIR,  Plano
     
     if request.method == 'POST':
-        try:
-            archivo = request.FILES['archivo_excel']
-            df = pd.read_excel(archivo)
-            ordenCompra = request.POST['ordenCompra']
-            linea = request.POST['linea']
-            consecutivo = request.POST['consecutivo']
-            
-            #original
-            dfOriginal = pd.read_excel(archivo)
-            
-            # Limpiar los valores no finitos
-            dfOriginal['UPC'] = dfOriginal['UPC'].fillna(0)  # Rellenar los valores NaN con 0
-            dfOriginal['UPC'] = dfOriginal['UPC'].replace([np.inf, -np.inf], 0)  # Reemplazar inf con 0
-            
-            # Eliminar los decimales          
-            dfOriginal['UPC'] = dfOriginal['UPC'].astype(str)
-            dfOriginal['UPC'] = dfOriginal['UPC'].apply(lambda x: x.split('.')[0])
-            dfOriginal['UPC'] = dfOriginal['UPC'].str.lstrip('-')
-            
-           
-            
-            #Tabla Epir
-            df1 = pd.read_excel(archivo)
-            
-            
-            #Borrar los "SubTotal"
-            for x in df1.index:
-                    if df1.loc[x, "Cod.Tienda"] == "SubTotal":
-                        df1.drop(x, inplace = True)
-            
-             # Eliminar los decimales
-            df1['UPC'] = df1['UPC'].astype(str)
-            df1['UPC'] = df1['UPC'].apply(lambda x: x.split('.')[0])
-            df1['UPC'] = df1['UPC'].str.lstrip('-')
-                       
-            
-            #Ordenar por codigo de tienda
-            #df1.sort_values(by='Cod.Tienda', inplace=True)
-            
-            #Eliminar columnas
-            df1.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
-            
-            
-            
-            #Columna numero de caja
-            consecutivo= str(consecutivo)
-            conse= "1811045990" + consecutivo
-            conse = int(conse)
-            #df1['Numero Caja'] = df1.groupby('Tienda').cumcount() + 18110459900000
-            #df1['Numero Caja'] = df1.groupby('Cod.Tienda').ngroup() + int(conse)
-            
-            # Función para extraer el color después del tercer "/"
-            def extraer_color(cadena):
-                partes = cadena.split('/')
-                if len(partes) > 3:
-                    return partes[3]
-                else:
-                    return ''
-
-            def extraer_ref(cadena):
-                partes = cadena.split('/')
-                if len(partes) > 2:
-                    return partes[2]
-                else:
-                    return ''
-
-
-            # Aplicar la función para extraer el color y referencia y agregarlo como una nueva columna
-            df1['Color'] = df1['Producto'].apply(extraer_color)
-            df1['Ref'] = df1['Producto'].apply(extraer_ref)
-            # Ordenar el DataFrame por las columnas "Cod.Tienda" y "Color"
-            #df1 = df1.sort_values(by=['Ref', 'Color', 'Cod.Tienda'])
-            
-       
-            df1.sort_values(by=['Ref', 'Color'], inplace=True)
-            # Restablecer el índice para evitar ambigüedad
-            df1 = df1.reset_index()
-            # Eliminar el nombre del índice
-            df1.index.name = None
-            
-            # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
-            df1['Numero Caja'] = df1.groupby(['Ref', 'Color', 'Cod.Tienda']).ngroup() + int(conse)
-            
-            #Si la tienda es 9903 asignarle un consecutivo individual a los elementos del grupo
-            for index, (tienda, caja) in enumerate(zip(df1['Cod.Tienda'], df1['Numero Caja'])):
-                if tienda == 9903:
-                    start_index = index + 1
+        #try:
+        archivo = request.FILES['archivo_excel']
+        df = pd.read_excel(archivo)
+        ordenCompra = request.POST['ordenCompra']
+        linea = request.POST['linea']
+        consecutivo = request.POST['consecutivo']
+        
+        #original
+        dfOriginal = pd.read_excel(archivo)
+        
+        # Limpiar los valores no finitos
+        dfOriginal['UPC'] = dfOriginal['UPC'].fillna(0)  # Rellenar los valores NaN con 0
+        dfOriginal['UPC'] = dfOriginal['UPC'].replace([np.inf, -np.inf], 0)  # Reemplazar inf con 0
+        
+        # Eliminar los decimales          
+        dfOriginal['UPC'] = dfOriginal['UPC'].astype(str)
+        dfOriginal['UPC'] = dfOriginal['UPC'].apply(lambda x: x.split('.')[0])
+        dfOriginal['UPC'] = dfOriginal['UPC'].str.lstrip('-')
+        
+        
+        
+        #Tabla Epir
+        df1 = pd.read_excel(archivo)
+        
+        print(df1)
+        #Borrar los "SubTotal"
+        for x in df1.index:
+                if df1.loc[x, "Cod.Tienda"] == "SubTotal":
+                    df1.drop(x, inplace = True)
+        
+            # Eliminar los decimales
+        df1['UPC'] = df1['UPC'].astype(str)
+        df1['UPC'] = df1['UPC'].apply(lambda x: x.split('.')[0])
+        df1['UPC'] = df1['UPC'].str.lstrip('-')
                     
+        print(df1)
+        #Ordenar por codigo de tienda
+        #df1.sort_values(by='Cod.Tienda', inplace=True)
+        
+        #Eliminar columnas
+        df1.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
+        
+        print("eliminar")
+        print(df1)
+        
+        #Columna numero de caja
+        consecutivo= str(consecutivo)
+        conse= "1811045990" + consecutivo
+        conse = int(conse)
+        #df1['Numero Caja'] = df1.groupby('Tienda').cumcount() + 18110459900000
+        #df1['Numero Caja'] = df1.groupby('Cod.Tienda').ngroup() + int(conse)
+        
+        # Función para extraer el color después del tercer "/"
+        def extraer_color(cadena):
+            partes = cadena.split('/')
+            if len(partes) > 3:
+                return partes[3]
+            else:
+                return ''
+
+        def extraer_ref(cadena):
+            partes = cadena.split('/')
+            if len(partes) > 2:
+                return partes[2]
+            else:
+                return ''
+
+
+        # Aplicar la función para extraer el color y referencia y agregarlo como una nueva columna
+        df1['Color'] = df1['Producto'].apply(extraer_color)
+        df1['Ref'] = df1['Producto'].apply(extraer_ref)
+        # Ordenar el DataFrame por las columnas "Cod.Tienda" y "Color"
+        #df1 = df1.sort_values(by=['Ref', 'Color', 'Cod.Tienda'])
+        
+        print(df1)
+        df1.sort_values(by=['Ref', 'Color'], inplace=True)
+        # Restablecer el índice para evitar ambigüedad
+        df1 = df1.reset_index()
+        # Eliminar el nombre del índice
+        df1.index.name = None
+        print(df1)
+        # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
+        df1['Numero Caja'] = df1.groupby(['Ref', 'Color', 'Cod.Tienda']).ngroup() + int(conse)
+        print("NUMERO CAJA")
+        print(df1)
+        df1.reset_index(drop=True, inplace=True)
+        df1.index.name = None
+        print(df1)
+        #Si la tienda es 9903 asignarle un consecutivo individual a los elementos del grupo
+        for index, (tienda, caja) in enumerate(zip(df1['Cod.Tienda'], df1['Numero Caja'])):
+            if tienda == 9903:
+                start_index = index + 1
+                
+                if start_index < len(df1):
+                    
+                    print(f"index " + str(start_index))
+                    print(df1)
                     index += 1
                     if df1.loc[index, 'Cod.Tienda'] == 9903:
                         df1.at[index, 'Numero Caja'] = caja
@@ -187,77 +196,83 @@ def res2 (request):
                     if start_index < len(df1):
                         if df1.loc[index, 'Cod.Tienda'] == 9903:
                             df1.loc[start_index:, 'Numero Caja'] += 1
+                            print("aumento")
+        
+        df1.reset_index(drop=True, inplace=True)
+        df1.index.name = None
+        print("EPIR")
+        #print(df1)       
             
-            print("EPIR")
-            print(df1)       
-               
-            
-            # Eliminar la columna temporal
-            df1 = df1.drop(columns=['Color'])           
-            df1 = df1.drop(columns=['Ref'])
-            
-            
-            
-            # Convertir la columna a formato de cadena
-            
-            df1['Numero Caja'] = df1['Numero Caja'].astype(str)  
-            df1['Cod.Prod'] = df1['Cod.Prod'].astype(int)
-            df1['Cod.Prod'] = df1['Cod.Prod'].astype(str)
-            df1['Cod.Prod'] = df1['Cod.Prod'].str.lstrip('-')
-            
-            
-            
-            
-            #Tabla Plano
-            
-            #Borrar los "SubTotal"
-            for x in df.index:
-                    if df.loc[x, "Cod.Tienda"] == "SubTotal":
-                        df.drop(x, inplace = True)
-            
-            
-            
-            # Eliminar los decimales
-            df['UPC'] = df['UPC'].astype(str)
-            df['UPC'] = df['UPC'].apply(lambda x: x.split('.')[0])
-            df['UPC'] = df['UPC'].str.lstrip('-')
-                       
-            
-            
-            #Eliminar columnas
-            df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
-            
-           # Columnas para color y tallas
-            
-            df['Color'] = df['Producto'].str.split('/').str[3]
-            
-            df['Talla'] = df['Producto'].str.split('/').str[4]
-            df['Ref'] = df['Producto'].str.split('/').str[2]
-            
-            
-            
-           
-            #Ordenar por Color
-            df.sort_values(by=['Ref','Color'], inplace=True)
-            #df['Numero Caja copia'] = df1['Numero Caja']
-            df = df.reset_index()
-            # Eliminar el nombre del índice
-            df.index.name = None
-            
-            
-             #Columna numero de caja
-            consecutivo= str(consecutivo)
-            conse= "1811045990" + consecutivo
-            conse = int(conse)
-            
-            # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
-            df['Numero Caja'] = df.groupby(['Ref', 'Color', 'Cod.Tienda']).ngroup() + int(conse)
-             
-             #Si la tienda es 9903 asignarle un consecutivo individual a los elementos del grupo
-            for index, (tienda, caja) in enumerate(zip(df['Cod.Tienda'], df['Numero Caja'])):
-                if tienda == 9903:
-                    start_index = index + 1
+        
+        # Eliminar la columna temporal
+        df1 = df1.drop(columns=['Color'])           
+        df1 = df1.drop(columns=['Ref'])
+        
+        
+        
+        # Convertir la columna a formato de cadena
+        
+        df1['Numero Caja'] = df1['Numero Caja'].astype(str)  
+        df1['Cod.Prod'] = df1['Cod.Prod'].astype(int)
+        df1['Cod.Prod'] = df1['Cod.Prod'].astype(str)
+        df1['Cod.Prod'] = df1['Cod.Prod'].str.lstrip('-')
+        
+        
+        
+        
+        #Tabla Plano
+        
+        #Borrar los "SubTotal"
+        for x in df.index:
+                if df.loc[x, "Cod.Tienda"] == "SubTotal":
+                    df.drop(x, inplace = True)
+        
+        
+        
+        # Eliminar los decimales
+        df['UPC'] = df['UPC'].astype(str)
+        df['UPC'] = df['UPC'].apply(lambda x: x.split('.')[0])
+        df['UPC'] = df['UPC'].str.lstrip('-')
                     
+        
+        
+        #Eliminar columnas
+        df.drop(['Cant.Distrib', 'Cant.Recibida', 'Cant.Pendiente'], axis=1, inplace=True)
+        
+        # Columnas para color y tallas
+        
+        df['Color'] = df['Producto'].str.split('/').str[3]
+        
+        df['Talla'] = df['Producto'].str.split('/').str[4]
+        df['Ref'] = df['Producto'].str.split('/').str[2]
+        
+        
+        
+        
+        #Ordenar por Color
+        df.sort_values(by=['Ref','Color'], inplace=True)
+        #df['Numero Caja copia'] = df1['Numero Caja']
+        df = df.reset_index()
+        # Eliminar el nombre del índice
+        df.index.name = None
+        
+        
+            #Columna numero de caja
+        consecutivo= str(consecutivo)
+        conse= "1811045990" + consecutivo
+        conse = int(conse)
+        
+        # Agrupar por 'Cod.Tienda', 'Color' y asignar un número a cada grupo
+        df['Numero Caja'] = df.groupby(['Ref', 'Color', 'Cod.Tienda']).ngroup() + int(conse)
+        
+        df = df.reset_index()
+        df.index.name = None
+            #Si la tienda es 9903 asignarle un consecutivo individual a los elementos del grupo
+        for index, (tienda, caja) in enumerate(zip(df['Cod.Tienda'], df['Numero Caja'])):
+            if tienda == 9903:
+                start_index = index + 1
+                
+                if start_index < len(df):
                     index += 1
                     if df.loc[index, 'Cod.Tienda'] == 9903:
                         df.at[index, 'Numero Caja'] = caja
@@ -265,90 +280,91 @@ def res2 (request):
                     if start_index < len(df):
                         if df.loc[index, 'Cod.Tienda'] == 9903:
                             df.loc[start_index:, 'Numero Caja'] += 1       
+        df.reset_index(drop=True, inplace=True)
+        df.index.name = None        
+        print("Plano")
+        print (df)
+                #Igual que el EPIR
+                
+                
+        #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
+        
+        
+        #df['Numero Caja'] = df.groupby('Color').ngroup() + int(conse)
+        
+        # Convertir la columna a formato de cadena
+        
+        
+        df['Cod.Prod'] = df['Cod.Prod'].astype(int)
+        df['Cod.Prod'] = df['Cod.Prod'].astype(str)
+        
+        # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
+        df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
+        
+        
+        # Eliminar los decimales
+        df['UPC'] = df['UPC'].astype(str)
+        df['UPC'] = df['UPC'].apply(lambda x: x.split('.')[0])
+        df['UPC'] = df['UPC'].str.lstrip('-')
+        
+        
+        df['Numero Caja'] = df['Numero Caja'].astype(str)
+        
+        
+        #nuevo_df = nuevo_df.merge(df1[['Cod.Tienda', 'Color', 'Numero Caja']], on=['Cod.Tienda', 'Color'], how='left')
+        # Crear una nueva tabla para hacer el resumen
+        
+        #nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
+        
+        nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref', 'Numero Caja']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
+        
+        #result_df = df[df['Cod.Tienda'] != 9903].groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
                     
-            print("Plano")
-            print (df)
-                    #Igual que el EPIR
-                    
-                    
-            #df['Numero Caja'] = df.groupby('Tienda').cumcount() + 18110459900000
-            
-            
-            #df['Numero Caja'] = df.groupby('Color').ngroup() + int(conse)
-            
-            # Convertir la columna a formato de cadena
-            
-            
-            df['Cod.Prod'] = df['Cod.Prod'].astype(int)
-            df['Cod.Prod'] = df['Cod.Prod'].astype(str)
-            
-            # Borrar el guion ("-") si está en la primera posición para todos los datos de la columna 'Cod.Prod'
-            df['Cod.Prod'] = df['Cod.Prod'].str.lstrip('-')
-           
-            
-            # Eliminar los decimales
-            df['UPC'] = df['UPC'].astype(str)
-            df['UPC'] = df['UPC'].apply(lambda x: x.split('.')[0])
-            df['UPC'] = df['UPC'].str.lstrip('-')
-            
-            
-            df['Numero Caja'] = df['Numero Caja'].astype(str)
-            
-            
-            #nuevo_df = nuevo_df.merge(df1[['Cod.Tienda', 'Color', 'Numero Caja']], on=['Cod.Tienda', 'Color'], how='left')
-            # Crear una nueva tabla para hacer el resumen
-            
-            #nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
-            
-            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref', 'Numero Caja']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
-            
-            #result_df = df[df['Cod.Tienda'] != 9903].groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
-                        
-            
-            
-            nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
-            
-            # columnas Linea y Orden de compra
-            nuevo_df['Linea'] = linea
-            nuevo_df['Orden de Compra'] = ordenCompra
-            
-            
-            #Numero de caja
-            
-            # Ordenar el DataFrame por la columna  "Color"
-            #nuevo_df = nuevo_df.sort_values(by='Color')
-            #Ordenar por Color
-            
-            nuevo_df['Color2'] = nuevo_df['Color']  # Create a copy of the "Color" column
-            nuevo_df['Referencia'] = nuevo_df['Ref']  # Create a copy of the "Ref" column
-            nuevo_df.sort_values(by=['Referencia', 'Color2'], inplace=True)  # Sort the DataFrame by the "Color2" column
-            nuevo_df.drop(columns=['Color2'], inplace=True)  # Drop the "Color2" column
-            nuevo_df.drop(columns=['Referencia'], inplace=True)  # Drop the "Referencia" column
-           
-            
-            
-            # Crear el archivo Excel en memoria
-            # Crear un escritor de Excel usando pandas
-            excel_buffer = BytesIO()
-            writer = pd.ExcelWriter(excel_buffer, engine='xlsxwriter')
-            df1.drop('index', axis=1, inplace=True)
-            dfOriginal.to_excel(writer, sheet_name='Original', index=False)
-            df1.to_excel(writer, sheet_name='EPIR', index=False)
-            nuevo_df.to_excel(writer, sheet_name='Plano', index=False)
+        
+        
+        nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
+        
+        # columnas Linea y Orden de compra
+        nuevo_df['Linea'] = linea
+        nuevo_df['Orden de Compra'] = ordenCompra
+        
+        
+        #Numero de caja
+        
+        # Ordenar el DataFrame por la columna  "Color"
+        #nuevo_df = nuevo_df.sort_values(by='Color')
+        #Ordenar por Color
+        
+        nuevo_df['Color2'] = nuevo_df['Color']  # Create a copy of the "Color" column
+        nuevo_df['Referencia'] = nuevo_df['Ref']  # Create a copy of the "Ref" column
+        nuevo_df.sort_values(by=['Referencia', 'Color2'], inplace=True)  # Sort the DataFrame by the "Color2" column
+        nuevo_df.drop(columns=['Color2'], inplace=True)  # Drop the "Color2" column
+        nuevo_df.drop(columns=['Referencia'], inplace=True)  # Drop the "Referencia" column
+        
+        
+        
+        # Crear el archivo Excel en memoria
+        # Crear un escritor de Excel usando pandas
+        excel_buffer = BytesIO()
+        writer = pd.ExcelWriter(excel_buffer, engine='xlsxwriter')
+        df1.drop('index', axis=1, inplace=True)
+        dfOriginal.to_excel(writer, sheet_name='Original', index=False)
+        df1.to_excel(writer, sheet_name='EPIR', index=False)
+        nuevo_df.to_excel(writer, sheet_name='Plano', index=False)
 
-            # Guardar el archivo de Excel
-            writer.close()
+        # Guardar el archivo de Excel
+        writer.close()
 
-            # Asegurarse de que la posición del archivo esté al principio
-            excel_buffer.seek(0)
+        # Asegurarse de que la posición del archivo esté al principio
+        excel_buffer.seek(0)
 
-            # Crear la respuesta HTTP con el archivo Excel como contenido
-            response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename=Distribuido.xlsx'
-            return response
-        except Exception as e:
-            messages.error(request, f"Error: {e}")
-        return redirect('convertidor:home')
+        # Crear la respuesta HTTP con el archivo Excel como contenido
+        response = HttpResponse(excel_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=Distribuido.xlsx'
+        return response
+        #except Exception as e:
+           # messages.error(request, f"Error: {e}")
+        #return redirect('convertidor:home')
     
 def res2suma(request):
     
