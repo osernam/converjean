@@ -122,6 +122,11 @@ def res2 (request):
                     if df1.loc[x, "Cod.Tienda"] == "SubTotal":
                         df1.drop(x, inplace = True)
             
+             # Eliminar los decimales
+            df1['UPC'] = df1['UPC'].astype(str)
+            df1['UPC'] = df1['UPC'].apply(lambda x: x.split('.')[0])
+            df1['UPC'] = df1['UPC'].str.lstrip('-')
+                       
             
             #Ordenar por codigo de tienda
             #df1.sort_values(by='Cod.Tienda', inplace=True)
@@ -203,7 +208,7 @@ def res2 (request):
             
             
             
-            #Tabla Distribuido
+            #Tabla Plano
             
             #Borrar los "SubTotal"
             for x in df.index:
@@ -213,9 +218,9 @@ def res2 (request):
             
             
             # Eliminar los decimales
-            df1['UPC'] = df1['UPC'].astype(str)
-            df1['UPC'] = df1['UPC'].apply(lambda x: x.split('.')[0])
-            df1['UPC'] = df1['UPC'].str.lstrip('-')
+            df['UPC'] = df['UPC'].astype(str)
+            df['UPC'] = df['UPC'].apply(lambda x: x.split('.')[0])
+            df['UPC'] = df['UPC'].str.lstrip('-')
                        
             
             
@@ -235,9 +240,11 @@ def res2 (request):
             #Ordenar por Color
             df.sort_values(by=['Ref','Color'], inplace=True)
             #df['Numero Caja copia'] = df1['Numero Caja']
-            #df = df1.reset_index()
+            df = df.reset_index()
             # Eliminar el nombre del índice
-            #df.index.name = None
+            df.index.name = None
+            
+            
              #Columna numero de caja
             consecutivo= str(consecutivo)
             conse= "1811045990" + consecutivo
@@ -291,14 +298,12 @@ def res2 (request):
             #nuevo_df = nuevo_df.merge(df1[['Cod.Tienda', 'Color', 'Numero Caja']], on=['Cod.Tienda', 'Color'], how='left')
             # Crear una nueva tabla para hacer el resumen
             
-            #nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
+            #nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
             
-            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
+            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref', 'Numero Caja']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
             
-            #merged_df = nuevo_df.merge(df[['Cod.Tienda', 'Color', 'Numero Caja']], on=['Cod.Tienda', 'Color'], how='left')
-            #merged_df['Numero Caja'] = merged_df['Numero Caja_y'].fillna(merged_df['Numero Caja_x'])
-            #nuevo_df['Numero Caja'] = merged_df['Numero Caja']
-            
+            #result_df = df[df['Cod.Tienda'] != 9903].groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first', 'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first','Numero Caja':'first'})
+                        
             
             
             nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
@@ -413,7 +418,7 @@ def res2suma(request):
             
             # Crear una nueva tabla para hacer el resumen
             
-            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first', 'Numero Caja': 'first'})
+            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref', 'Numero Caja']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first', 'Numero Caja': 'first'})
             
             nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
             
@@ -439,10 +444,22 @@ def res2suma(request):
             #nuevo_df['Numero Caja'] = nuevo_df['Numero Caja'].astype(str)
             
             
+             # Eliminar los decimales
+            dfHoja1['UPC'] = dfHoja1['UPC'].astype(str)
+            dfHoja1['UPC'] = dfHoja1['UPC'].apply(lambda x: x.split('.')[0])
+            dfHoja1['UPC'] = dfHoja1['UPC'].str.lstrip('-')
+            
+            hojaDos= pd.read_excel(xls, nombreHojas[1])
+            
+            hojaDos['UPC'] = hojaDos['UPC'].astype(str)
+            hojaDos['UPC'] = hojaDos['UPC'].apply(lambda x: x.split('.')[0])
+            hojaDos['UPC'] = hojaDos['UPC'].str.lstrip('-')
+            
+            
             excel_buffer = BytesIO()
             writer = pd.ExcelWriter(excel_buffer, engine='xlsxwriter')
             
-            hojaDos= pd.read_excel(xls, nombreHojas[1])
+            
             hojaDos.reset_index(drop=True, inplace=True)
             hojaDos['Numero Caja'] = hojaDos['Numero Caja'].astype(str)
             #hojaDos.drop(columns=['Unnamed: 0', 'index'], inplace=True)
