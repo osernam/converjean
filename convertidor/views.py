@@ -434,7 +434,7 @@ def res2suma(request):
             
             # Crear una nueva tabla para hacer el resumen
             
-            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref', 'Numero Caja']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last', 'Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first', 'Numero Caja': 'first'})
+            nuevo_df = df.groupby(['Cod.Tienda', 'Tienda', 'Color', 'Ref', 'Numero Caja']).agg({'Cod.Tienda': 'first', 'Tienda': 'first', 'Cod.Prod': 'first',  'UPC': 'last','Talla': lambda x: ' - '.join(x), 'Cód.Provee': 'first', 'Emp. Pendiente': 'sum', 'Color': 'first', 'Ref': 'first', 'Numero Caja': 'first'})
             
             nuevo_df.rename(columns={'Talla': 'Producto'}, inplace=True)
             
@@ -546,12 +546,14 @@ def res3 (request):
             # Crear las nuevas columnas 'Talla' y 'Color'
             #df['Producto '] = df['Producto'].apply(extract_talla)
             
-            df.insert(6, 'Producto ', df['Producto'].apply(extract_talla))
+            df.insert(6, 'Talla ', df['Producto'].apply(extract_talla))
             df['Color'] = df['Producto'].apply(extract_color)
 
             
             #Eliminar columnas
-            df.drop(['Producto'], axis=1, inplace=True)
+            #df.drop(['Producto'], axis=1, inplace=True)
+            #df.rename(columns={'Producto ', 'Productos'}, inplace=True);
+            
             
             # Crear una nueva tabla con los registros separados por cuántas cajas se pueden empacar
             nueva_tabla = []
@@ -583,7 +585,7 @@ def res3 (request):
             nueva_df['Linea'] = linea
             nueva_df['Orden de Compra'] = ordenCompra
             
-            nueva_df = nueva_df.sort_values(by=['Color', 'Producto '])
+            nueva_df = nueva_df.sort_values(by=['Color', 'Talla'])
             # Incrementar el consecutivo por cada fila
             nueva_df['Numero Caja'] = range(conse, conse + len(nueva_df))  # Usar la función range para generar una secuencia de valores consecutivos
             
